@@ -1,13 +1,14 @@
 ﻿using Python.Runtime;
-using RSBot.Python.API;
-using RSBot.Python.API.GUI.Controls;
-using RSBot.Python.API.ModuleLoader;
+using RSBot.Python.Components.API.GUI.Controls;
+using RSBot.Python.Components.API.GUI.Wrapper;
+using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace RSBot.Python.API.GUI
+namespace RSBot.Python.Components.API.GUI
 {
     public class WFAPI : IPythonPlugin
     {
@@ -43,41 +44,39 @@ namespace RSBot.Python.API.GUI
                 _api.CreatePage(pluginName);
             }
 
-            public LabelWrapper Label(string text, int x, int y)
+            public LabelWrapper Label(string text, int x, int y, int? width = null, int? height = null)
             {
-                var lbl = _api.CreateLabel(PluginName, x, y, text);
+                var lbl = _api.CreateLabel(PluginName, x, y, text, width, height);
                 var wrapper = new LabelWrapper(lbl, _api.Form);
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
 
-            public ButtonWrapper Button(string text, int x, int y, PyObject handler)
+            public ButtonWrapper Button(string text, int x, int y, int? width = null, int? height = null, PyObject handler = null)
             {
-                var btn = _api.CreateButton(PluginName, x, y, text);
+                var btn = _api.CreateButton(PluginName, x, y, text, width, height);
                 var wrapper = new ButtonWrapper(btn, _api.Form, handler);
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
-
-            public CheckBoxWrapper CheckBox(string text, int x, int y, PyObject handler)
+            public CheckBoxWrapper CheckBox(string text, int x, int y, int? width = null, int? height = null, PyObject handler = null)
             {
-                var cb = _api.CreateCheckBox(PluginName, x, y, text);
+                var cb = _api.CreateCheckBox(PluginName, x, y, text, width, height);
                 var wrapper = new CheckBoxWrapper(cb, _api.Form, handler);
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
-
-            public TextBoxWrapper TextBox(string defaultText, int x, int y, PyObject handler)
+            public TextBoxWrapper TextBox(string text, int x, int y, int? width = null, int? height = null, PyObject handler = null)
             {
-                var tb = _api.CreateTextBox(PluginName, x, y, defaultText);
+                var tb = _api.CreateTextBox(PluginName, x, y, text, width, height);
                 var wrapper = new TextBoxWrapper(tb, _api.Form, handler);
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
 
-            public ComboBoxWrapper ComboBox(int x, int y, PyObject handler)
+            public ComboBoxWrapper ComboBox(string text, int x, int y, int? width = null, int? height = null, PyObject handler = null)
             {
-                var cb = _api.CreateComboBox(PluginName, x, y);
+                var cb = _api.CreateComboBox(PluginName, x, y, text, width, height);
                 var wrapper = new ComboBoxWrapper(cb, _api.Form, handler);
                 _api._activeControls.Add(wrapper);
                 return wrapper;
@@ -117,50 +116,71 @@ namespace RSBot.Python.API.GUI
             }));
         }
 
-        private Label CreateLabel(string pluginName, int x, int y, string text)
+        private Label CreateLabel(string pluginName, int x, int y, string text, int? width = null, int? height = null)
         {
             Label lbl = new Label { Text = text, Left = x, Top = y, AutoSize = true };
+            if (width.HasValue) lbl.Width = width.Value;
+            if (height.HasValue) lbl.Height = height.Value;
+
             AddControl(pluginName, lbl);
             return lbl;
         }
 
-        private Button CreateButton(string pluginName, int x, int y, string text)
+        private Button CreateButton(string pluginName, int x, int y, string text, int? width = null, int? height = null)
         {
             Button btn = new Button { Text = text, Left = x, Top = y, AutoSize = true };
+            if (width.HasValue)
+            {
+                btn.Width = width.Value;                
+            }
+            if (height.HasValue)
+            {
+                btn.Height = height.Value;
+            }
             AddControl(pluginName, btn);
             return btn;
         }
 
-        private CheckBox CreateCheckBox(string pluginName, int x, int y, string text)
+        private CheckBox CreateCheckBox(string pluginName, int x, int y, string text, int? width = null, int? height = null)
         {
             CheckBox cb = new CheckBox { Text = text, Left = x, Top = y, AutoSize = true };
+            if (width.HasValue) cb.Width = width.Value;
+            if (height.HasValue) cb.Height = height.Value;
             AddControl(pluginName, cb);
             return cb;
         }
 
-        private TextBox CreateTextBox(string pluginName, int x, int y, string defaultText)
+        private TextBox CreateTextBox(string pluginName, int x, int y, string defaultText,int? width = null,int? height = null)
         {
             TextBox tb = new TextBox
             {
                 Text = defaultText,
                 Left = x,
                 Top = y,
-                Width = 150
+                Width = width ?? 150
             };
+            if (height.HasValue)
+            {
+                tb.Multiline = true;
+                tb.Height = height.Value;
+            }
 
             AddControl(pluginName, tb);
             return tb;
         }
 
-        private ComboBox CreateComboBox(string pluginName, int x, int y)
+        private ComboBox CreateComboBox(string pluginName, int x, int y, string? text = null, int? width = null, int? height = null)
         {
             ComboBox cb = new ComboBox
             {
+                Text = text,
                 Left = x,
                 Top = y,
                 Width = 150,
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
+            if (height.HasValue) cb.Height= height.Value;
+            if (width.HasValue) cb.Width = width.Value;
 
             AddControl(pluginName, cb);
             return cb;

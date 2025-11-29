@@ -37,13 +37,13 @@ partial class Main
         tcPlugin = new SDUI.Controls.TabControl();
         tpPlugins = new TabPage();
         dgvPlugin = new DataGridView();
-        tbPluginLog = new RichTextBox();
         ColEnabled = new DataGridViewCheckBoxColumn();
         ColName = new DataGridViewTextBoxColumn();
         ColDescription = new DataGridViewTextBoxColumn();
         ColAuthor = new DataGridViewTextBoxColumn();
         ColVersion = new DataGridViewTextBoxColumn();
         FileName = new DataGridViewTextBoxColumn();
+        tbPluginLog = new RichTextBox();
         mainPanel.SuspendLayout();
         flowLayoutPanel1.SuspendLayout();
         tcPlugin.SuspendLayout();
@@ -75,7 +75,7 @@ partial class Main
         flowLayoutPanel1.Controls.Add(btnReload);
         flowLayoutPanel1.Controls.Add(btnOpenFolder);
         flowLayoutPanel1.Dock = DockStyle.Bottom;
-        flowLayoutPanel1.Location = new Point(0, 339);
+        flowLayoutPanel1.Location = new Point(0, 326);
         flowLayoutPanel1.Name = "flowLayoutPanel1";
         flowLayoutPanel1.Radius = 10;
         flowLayoutPanel1.ShadowDepth = 4F;
@@ -114,6 +114,7 @@ partial class Main
         btnOpenFolder.TabIndex = 1;
         btnOpenFolder.Text = "Open Folder";
         btnOpenFolder.UseVisualStyleBackColor = true;
+        btnOpenFolder.Click += btnOpenFolder_Click;
         // 
         // tcPlugin
         // 
@@ -124,7 +125,7 @@ partial class Main
         tcPlugin.Name = "tcPlugin";
         tcPlugin.Radius = new Padding(4);
         tcPlugin.SelectedIndex = 0;
-        tcPlugin.Size = new Size(600, 381);
+        tcPlugin.Size = new Size(600, 368);
         tcPlugin.TabIndex = 1;
         // 
         // tpPlugins
@@ -134,7 +135,7 @@ partial class Main
         tpPlugins.Location = new Point(4, 28);
         tpPlugins.Name = "tpPlugins";
         tpPlugins.Padding = new Padding(3);
-        tpPlugins.Size = new Size(592, 349);
+        tpPlugins.Size = new Size(592, 336);
         tpPlugins.TabIndex = 1;
         tpPlugins.Text = "Plugins";
         // 
@@ -160,17 +161,8 @@ partial class Main
         dgvPlugin.RowHeadersVisible = false;
         dgvPlugin.RowHeadersWidth = 51;
         dgvPlugin.SelectionMode = DataGridViewSelectionMode.CellSelect;
-        dgvPlugin.Size = new Size(586, 343);
+        dgvPlugin.Size = new Size(586, 330);
         dgvPlugin.TabIndex = 0;
-        // 
-        // tbPluginLog
-        // 
-        tbPluginLog.Dock = DockStyle.Bottom;
-        tbPluginLog.Location = new Point(0, 381);
-        tbPluginLog.Name = "tbPluginLog";
-        tbPluginLog.Size = new Size(600, 86);
-        tbPluginLog.TabIndex = 0;
-        tbPluginLog.Text = "";
         // 
         // ColEnabled
         // 
@@ -219,6 +211,15 @@ partial class Main
         FileName.ReadOnly = true;
         FileName.Visible = false;
         FileName.Width = 125;
+        // 
+        // tbPluginLog
+        // 
+        tbPluginLog.Dock = DockStyle.Bottom;
+        tbPluginLog.Location = new Point(0, 368);
+        tbPluginLog.Name = "tbPluginLog";
+        tbPluginLog.Size = new Size(600, 99);
+        tbPluginLog.TabIndex = 0;
+        tbPluginLog.Text = "";
         // 
         // Main
         // 

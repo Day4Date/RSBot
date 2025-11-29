@@ -2,7 +2,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace RSBot.Python.API.GUI.Controls
+namespace RSBot.Python.Components.API.GUI.Wrapper
 {
     public abstract class GuiControlWrapper
     {

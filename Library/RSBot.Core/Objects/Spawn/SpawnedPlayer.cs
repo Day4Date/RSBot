@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
-using RSBot.Core.Client.ReferenceObjects;
+﻿using RSBot.Core.Client.ReferenceObjects;
 using RSBot.Core.Network;
 using RSBot.Core.Objects.Item;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RSBot.Core.Objects.Spawn;
 
@@ -199,6 +202,9 @@ public sealed class SpawnedPlayer : SpawnedBionic
     /// <returns></returns>
     internal void Deserialize(Packet packet)
     {
+        byte[] data2 = packet.GetBytes();
+        string hexDump2 = BitConverter.ToString(data2).Replace("-", " ");
+        Log.Debug($"OPCode:{packet.HexCode} Länge {packet.Length} Daten (Hex): {hexDump2}");
         Scale = packet.ReadByte();
 
         if (Game.ClientType > GameClientType.Japanese_Old)

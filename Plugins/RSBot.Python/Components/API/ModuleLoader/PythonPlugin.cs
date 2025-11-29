@@ -1,8 +1,8 @@
-﻿namespace RSBot.Python.API.ModuleLoader
+﻿namespace RSBot.Python.Components.API.ModuleLoader
 {
     public static class PythonPluginAccessor
     {
-        public static dynamic? get(string moduleName)
+        public static dynamic get(string moduleName)
         {
             return ModuleLoader.Get(moduleName);
         }

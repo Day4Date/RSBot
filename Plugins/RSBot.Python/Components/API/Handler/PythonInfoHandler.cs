@@ -1,13 +1,8 @@
-﻿using RSBot.Python.API.ModuleLoader;
-using System;
-using System.Collections.Generic;
+﻿using RSBot.Python.Components.API.ModuleLoader;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace RSBot.Python.API.Handler
+namespace RSBot.Python.Components.API.Handler
 {
     public static class PluginMetaReader
     {

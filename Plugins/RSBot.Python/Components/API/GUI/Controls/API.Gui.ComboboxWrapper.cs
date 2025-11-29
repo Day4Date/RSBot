@@ -1,33 +1,37 @@
 ﻿using System;
 using System.Windows.Forms;
 using Python.Runtime;
+using RSBot.Python.Components.API.GUI.Wrapper;
 using RSBot.Python.Views;
 
-namespace RSBot.Python.API.GUI.Controls
+namespace RSBot.Python.Components.API.GUI.Controls
 {
     public class ComboBoxWrapper : GuiControlWrapper
     {
         private PyObject _callback;
 
-        public ComboBoxWrapper(ComboBox cb, Main form, PyObject callback)
+        public ComboBoxWrapper(ComboBox cb, Main form, PyObject callback = null)
             : base(cb, form)
         {
             _callback = callback;
-
-            cb.SelectedIndexChanged += (sender, args) =>
+            if (_callback != null)
             {
-                using (Py.GIL())
+
+                cb.SelectedIndexChanged += (sender, args) =>
                 {
-                    try
+                    using (Py.GIL())
                     {
-                        _callback.Invoke(new PyInt(cb.SelectedIndex));
+                        try
+                        {
+                            _callback.Invoke(new PyInt(cb.SelectedIndex));
+                        }
+                        catch (PythonException ex)
+                        {
+                            form.AppendLog(ex.ToString());
+                        }
                     }
-                    catch (PythonException ex)
-                    {
-                        form.AppendLog(ex.ToString());
-                    }
-                }
-            };
+                };
+            }
         }
 
         public void AddItem(string text)

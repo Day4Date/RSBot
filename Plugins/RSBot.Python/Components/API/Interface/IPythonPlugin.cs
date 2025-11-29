@@ -1,7 +1,6 @@
-﻿using RSBot.Python;
-using RSBot.Python.Views;
+﻿using RSBot.Python.Views;
 
-namespace RSBot.Python.API
+namespace RSBot.Python.Components.API.Interface
 {
     /// <summary>
     /// Dieses Interface beschreibt ein allgemeines "Python-Plugin".

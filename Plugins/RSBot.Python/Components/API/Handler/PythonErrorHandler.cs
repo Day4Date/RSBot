@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 
-namespace RSBot.Python.API
+namespace RSBot.Python.Components.API.Handler
 {
     public static class PythonErrorHandler
     {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.VisualBasic.Logging;
 using RSBot.Core.Event;
 using RSBot.Core.Network;
 using RSBot.Core.Objects.Spawn;
@@ -236,7 +237,14 @@ public static class SpawnManager
                         case 1:
                         {
                             var spawnedPlayer = new SpawnedPlayer(refObjId);
-                            spawnedPlayer.Deserialize(packet);
+                            try
+                            {
+                                spawnedPlayer.Deserialize(packet);
+                            }
+                            catch
+                            {
+
+                            }                          
 
                             _entities.Add(spawnedPlayer);
                             EventManager.FireEvent("OnSpawnPlayer", spawnedPlayer);

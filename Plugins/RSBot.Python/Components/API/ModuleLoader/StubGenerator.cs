@@ -1,5 +1,5 @@
-﻿using RSBot.Python.API.GUI;
-using RSBot.Python.API.GUI.Controls;
+﻿using RSBot.Python.Components.API.GUI;
+using RSBot.Python.Components.API.GUI.Wrapper;
 using System;
 using System.IO;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 
 
-namespace RSBot.Python.API.ModuleLoader
+namespace RSBot.Python.Components.API.ModuleLoader
 {
     public static class PythonStubGenerator
     {

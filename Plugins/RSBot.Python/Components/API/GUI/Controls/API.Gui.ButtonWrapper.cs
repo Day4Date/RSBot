@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Windows.Forms;
 using Python.Runtime;
+using RSBot.Python.Components.API.GUI.Wrapper;
 using RSBot.Python.Views;
 
-namespace RSBot.Python.API.GUI.Controls
+namespace RSBot.Python.Components.API.GUI.Controls
 {
     public class ButtonWrapper : GuiControlWrapper
     {

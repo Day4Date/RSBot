@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using RSBot.Python;
-using RSBot.Python.API;
+using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
 
-namespace RSBot.Python.API.ModuleLoader
+namespace RSBot.Python.Components.API.ModuleLoader
 {
     /// <summary>
     /// Der ModuleLoader ist dafür zuständig, automatisch alle Klassen zu finden,
@@ -50,7 +49,7 @@ namespace RSBot.Python.API.ModuleLoader
         /// Gibt ein Plugin anhand seines Namens zurück.
         /// Beispiel: Get("core") → CoreAPI-Instanz
         /// </summary>
-        public static IPythonPlugin? Get(string moduleName)
+        public static IPythonPlugin Get(string moduleName)
         {
             _plugins.TryGetValue(moduleName, out var plugin);
             return plugin;
