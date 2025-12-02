@@ -21,5 +21,8 @@
 		<ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj" />
 		<ProjectReference Include="..\..\SDUI\SDUI\SDUI.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Components\API\Core\Chat\" />
+	</ItemGroup>
 
 </Project>

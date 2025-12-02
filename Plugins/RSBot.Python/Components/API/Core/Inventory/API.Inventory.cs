@@ -1,9 +1,12 @@
 ﻿using Python.Runtime;
 using RSBot.Core;
+using RSBot.Core.Client.ReferenceObjects;
+using RSBot.Core.Extensions;
 using RSBot.Core.Objects;
 using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
 using System.Collections.Generic;
+using static System.Windows.Forms.Design.AxImporter;
 
 namespace RSBot.Python.Components.API.Core.Inventory
 {
@@ -27,6 +30,7 @@ namespace RSBot.Python.Components.API.Core.Inventory
         {
             _main = main;
         }
+        
         private PyList BuildItemList(IEnumerable<InventoryItem> items)
         {
             var list = new PyList();
@@ -45,6 +49,37 @@ namespace RSBot.Python.Components.API.Core.Inventory
                 pyItem.SetItem(new PyString("rarity"), new PyString(item.Record.GetRarityName()));
                 pyItem.SetItem(new PyString("durability"), new PyInt(item.Durability));
                 pyItem.SetItem(new PyString("slot"), new PyInt(item.Slot));
+                if (item.MagicOptions != null)
+                {
+                    var pyOptions = new PyList();
+                    foreach (var magicOption in item.MagicOptions)
+                    {
+                        var option = Game.ReferenceManager.GetMagicOption(magicOption.Id);
+
+                        if (option != null)
+                            pyOptions.Append(new PyString(GetFusingTranslation(option,magicOption.Value)));
+                    }
+                    pyItem.SetItem(new PyString("magic_options"), new PyList(pyOptions));
+
+                }
+                if (item.Attributes != 0)
+                {                    
+                    var availableAttributes = ItemAttributesInfo.GetAvailableAttributeGroupsForItem(item.Record);
+
+                    if (availableAttributes != null)
+                    {
+                        var pyAttributes = new PyList();
+                        foreach (var attribute in availableAttributes)
+                        {
+                            var slot = ItemAttributesInfo.GetAttributeSlotForItem(attribute, item.Record);
+                            var translation = attribute.GetTranslation();
+
+                            pyAttributes.Append(new PyString($"{translation} +{item.Attributes.GetPercentage(slot)}%"));
+                        }
+                        pyItem.SetItem(new PyString("attributes"), new PyList(pyAttributes));
+                    }
+
+                }
 
                 list.Append(pyItem);
             }
@@ -190,5 +225,111 @@ namespace RSBot.Python.Components.API.Core.Inventory
         {
             return GetPetStorage();
         }
+        public string GetFusingTranslation(RefMagicOpt magicOption, uint value)
+        {
+            //TODO: Use and extend GetGroupTranslation instead of hard coding this
+            switch (magicOption?.Group)
+            {
+                case "MATTR_INT":
+                case "MATTR_AVATAR_INT":
+                case "MATTR_INT_AVATAR":
+                    return $"Int {value} Increase";
+
+                case "MATTR_STR":
+                case "MATTR_STR_AVATAR":
+                case "MATTR_AVATAR_STR":
+                    return $"Str {value} Increase";
+
+                case "MATTR_DUR":
+                case "MATTR_AVATAR_DRUA":
+                    return $"Durability {value}% Increase";
+
+                case "MATTR_EVADE_BLOCK":
+                    return $"Blocking rate {value}";
+
+                case "MATTR_AVATAR_DARA":
+                    return $"Damage Absorption {value}% Increase";
+
+                case "MATTR_AVATAR_ER":
+                case "MATTR_ER":
+                    return $"Parry rate {value}% Increase";
+
+                case "MATTR_HR":
+                case "MATTR_AVATAR_HR":
+                    return $"Attack rate {value}% Increase";
+
+                case "MATTR_RESIST_FROSTBITE":
+                    return $"Freezing,FrostbiteHour {value}% Reduce";
+
+                case "MATTR_RESIST_ESHOCK":
+                    return $"Electrict shockHour {value}% Reduce";
+
+                case "MATTR_RESIST_BURN":
+                    return $"BurnHour {value}% Reduce";
+
+                case "MATTR_RESIST_POISON":
+                    return $"PoisoningHour {value}% Reduce";
+
+                case "MATTR_LUCK":
+                    return $"Lucky({value}Time/times)";
+
+                case "MATTR_SOLID":
+                    return $"Steady({value}Time/times)";
+                    ;
+                case "MATTR_ASTRAL":
+                    return $"Astral({value}Time/times)";
+
+                case "MATTR_ATHANASIA":
+                    return $"Immortal({value}Time/times)";
+
+                case "MATTR_AVATAR_MDIA":
+                case "MATTR_AVATAR_MDIA_2":
+                case "MATTR_AVATAR_MDIA_3":
+                case "MATTR_AVATAR_MDIA_4":
+                    return $"Ignore Monster Defense {value}% Probability";
+
+                case "MATTR_HP":
+                case "MATTR_AVATAR_HP":
+                    return $"HP {value} Increase";
+
+                case "MATTR_MP":
+                case "MATTR_AVATAR_MP":
+                    return $"MP {value} Increase";
+
+                case "MATTR_CRITICAL":
+                case "MATTR_EVADE_CRITICAL":
+                    return $"Critical {value}";
+
+                case "MATTR_NOT_REPARABLE":
+                    return "Not repairable";
+
+                case "MATTR_REGENHPMP":
+                    return $"HP recovery/MP recovery {value}% Increase";
+
+                case "MATTR_RESIST_ZOMBIE":
+                    return $"ZombieHour {value}% Reduce";
+
+                case "MATTR_RESIST_CSMP":
+                    return $"CombustionProbability {value}% Reduce";
+
+                case "MATTR_RESIST_SLEEP":
+                    return $"SleepProbability {value}% Reduce";
+
+                case "MATTR_RESIST_STUN":
+                    return $"StunProbability {value}% Reduce";
+
+                case "MATTR_RESIST_FEAR":
+                    return $"FearProbability {value}% Reduce";
+
+                case "MATTR_RESIST_DISEASE":
+                    return $"DiseaseProbability {value}% Reduce";
+
+                case "MATTR_DEC_MAXDUR":
+                    return $"Maximum durability {value}% Reduce";
+            }
+
+            return magicOption?.Group ?? $"Error. Mag. opt. value: {value}";
+        }
     }
+
 }

@@ -35,14 +35,23 @@ namespace RSBot.Python.Components.API.GUI.Controls
 
         }
 
-        public bool GetChecked()
+        private bool GetChecked()
         {
             return ((CheckBox)Control).Checked;
         }
 
-        public void SetChecked(bool value)
+        private void SetChecked(bool value)
         {
             Invoke(() => ((CheckBox)Control).Checked = value);
+        }
+
+        public bool get_checked()
+        {
+            return GetChecked();
+        }
+        public void set_checked(bool value)
+        {
+            SetChecked(value);
         }
     }
 }

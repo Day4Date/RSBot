@@ -6,24 +6,24 @@ using RSBot.Python.Views;
 
 namespace RSBot.Python.Components.API.GUI.Controls
 {
-    public class ComboBoxWrapper : GuiControlWrapper
+    public class ListBoxWrapper : GuiControlWrapper
     {
         private PyObject _callback;
 
-        public ComboBoxWrapper(ComboBox cb, Main form, PyObject callback = null)
-            : base(cb, form)
+        public ListBoxWrapper(ListBox lb, Main form, PyObject callback = null)
+            : base(lb, form)
         {
             _callback = callback;
+
             if (_callback != null)
             {
-
-                cb.SelectedIndexChanged += (sender, args) =>
+                lb.SelectedIndexChanged += (sender, args) =>
                 {
                     using (Py.GIL())
                     {
                         try
                         {
-                            _callback.Invoke(new PyInt(cb.SelectedIndex));
+                            _callback.Invoke(new PyInt(lb.SelectedIndex));
                         }
                         catch (PythonException ex)
                         {
@@ -34,44 +34,46 @@ namespace RSBot.Python.Components.API.GUI.Controls
             }
         }
 
+        private string GetText()
+        {
+            return ((ListBox)Control).Text;
+        }
+
         private void AddItem(string text)
         {
-            Invoke(() => ((ComboBox)Control).Items.Add(text));
+            Invoke(() => ((ListBox)Control).Items.Add(text));
         }
-
-        private int GetIndex()
-        {
-            return ((ComboBox)Control).SelectedIndex;
-        }
-
         private void SetIndex(int index)
         {
-            Invoke(() => ((ComboBox)Control).SelectedIndex = index);
+            Invoke(() => ((ListBox)Control).SelectedIndex = index);
         }
         private void RemoveItem(int index)
         {
-            Invoke(() => ((ComboBox)Control).Items.RemoveAt(index));
+            Invoke(() => ((ListBox)Control).Items.RemoveAt(index));
+        }
+        private int GetIndex()
+        {
+            return ((ListBox)Control).SelectedIndex;
         }
         private int GetItemCount()
         {
-            return ((ComboBox)Control).Items.Count;
+            return ((ListBox)Control).Items.Count;
         }
         private string GetItem(int index)
         {
-            return ((ComboBox)Control).Items[index].ToString();
+            return ((ListBox)Control).Items[index].ToString();
         }
         private string GetSelectedItem()
         {
-            return ((ComboBox)Control).SelectedItem.ToString();
+            return ((ListBox)Control).SelectedItem.ToString();
         }
-
+        public string get_text()
+        {
+            return GetText();
+        }
         public void add_item(string text)
         {
             AddItem(text);
-        }
-        public int selected_index()
-        {
-            return GetIndex();
         }
         public void set_index(int index)
         {
@@ -80,6 +82,10 @@ namespace RSBot.Python.Components.API.GUI.Controls
         public void remove_item(int index)
         {
             RemoveItem(index);
+        }
+        public int selected_index()
+        {
+            return GetIndex();
         }
         public int item_count()
         {

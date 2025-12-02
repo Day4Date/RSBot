@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using Python.Runtime;
 using RSBot.Core;
+using RSBot.Core.Network;
 
 namespace RSBot.Python.Components.API.Core
 {
@@ -101,6 +102,12 @@ namespace RSBot.Python.Components.API.Core
                 return false;
             }
         }
+        private void SendServer(ushort opcode, byte[] data)
+        {
+            Packet packet = new Packet(opcode);
+            packet.WriteBytes(data);
+            PacketManager.SendPacket(packet, PacketDestination.Server);
+        }
 
         /// <summary>
         /// Schreibt eine Nachricht ins Log-Fenster.
@@ -143,6 +150,10 @@ namespace RSBot.Python.Components.API.Core
         public bool stop_bot()
         {
             return StopBot();
+        }
+        public void send_server(ushort opcode, byte[] data)
+        {
+            SendServer(opcode, data);
         }
     }
 }

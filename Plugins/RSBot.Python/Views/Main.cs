@@ -13,7 +13,9 @@ using SDUI.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using static Python.Runtime.TypeSpec;
 
@@ -22,10 +24,6 @@ namespace RSBot.Python.Views;
 [ToolboxItem(false)]
 public partial class Main : DoubleBufferedControl
 {
-    //private Thread pythonThread;
-    //private PeriodicTimer _pluginTimer;
-    //private CancellationTokenSource _cts;
-    //private List<PyObject> _loadedPlugins = new List<PyObject>();
     private readonly PythonRuntimeManager _pyRuntime = new();
     private readonly PythonPluginManager _pyPlugins = new();
     private string projectDir = Directory.GetParent(Application.StartupPath).FullName;
@@ -54,7 +52,7 @@ public partial class Main : DoubleBufferedControl
 
             var row = dgvPlugin.Rows[e.RowIndex];
             bool isEnabled = Convert.ToBoolean(row.Cells[0].Value);
-            string fileName = row.Cells[5].Value.ToString(); // Versteckte Spalte mit Dateinamen
+            string fileName = row.Cells[5].Value.ToString();
             if (isEnabled)
             {
                 AppendLog($"Aktiviere Plugin: {fileName}");
@@ -76,8 +74,6 @@ public partial class Main : DoubleBufferedControl
         }
 
         tbPluginLog.AppendText(Environment.NewLine + text);
-        //tbPluginLog.SelectionStart = tbPluginLog.TextLength;  // Caret ans Ende
-        //tbPluginLog.SelectionLength = 0;
         tbPluginLog.ScrollToCaret();
     }
 
@@ -313,35 +309,18 @@ public partial class Main : DoubleBufferedControl
         byte[] data = packet.GetBytes();
         string opcode = packet.HexCode;
         string data_hex = BitConverter.ToString(data).Replace("-", " ");
-        _pyPlugins.CallPluginEvent("on_client_received", AppendLog, opcode,data_hex);
+        _pyPlugins.CallPluginEvent("on_packet_from_client", AppendLog, opcode,data_hex);
     }
     private void OnServerPacketReceive(Packet packet)
     {
         byte[] data = packet.GetBytes();
         string opcode = packet.HexCode;
         string data_hex = BitConverter.ToString(data).Replace("-", " ");
-        _pyPlugins.CallPluginEvent("on_server_received", AppendLog, opcode,data_hex);
+        _pyPlugins.CallPluginEvent("on_packet_from_server", AppendLog, opcode,data_hex);
     }
 
     private void btnOpenFolder_Click(object sender, EventArgs e)
     {
-        if (SpawnManager.TryGetEntities<SpawnedPlayer>(out var players))
-        {
-            foreach (var p in players)
-            {
-                AppendLog($"Name: {p.Name}, x: {p.Position.X}, x: {p.Position.Y}, UID: {p.UniqueId}");
-                foreach (var entry in p.Inventory)
-                {
-                    var key = entry.Key;       // RefObjItem
-                    var value = entry.Value;   // byte (plus value)
-
-                    AppendLog($"{key.CodeName} +{value}");
-                }
-            }    
-                
-        }
-
-
-
+      Process.Start("explorer.exe", Path.Combine(projectDir, "Data", "Python", "Plugins"));
     }
 }

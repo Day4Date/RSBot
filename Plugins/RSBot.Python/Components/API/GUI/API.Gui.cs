@@ -5,7 +5,6 @@ using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace RSBot.Python.Components.API.GUI
@@ -73,11 +72,17 @@ namespace RSBot.Python.Components.API.GUI
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
-
             public ComboBoxWrapper ComboBox(string text, int x, int y, int? width = null, int? height = null, PyObject handler = null)
             {
                 var cb = _api.CreateComboBox(PluginName, x, y, text, width, height);
                 var wrapper = new ComboBoxWrapper(cb, _api.Form, handler);
+                _api._activeControls.Add(wrapper);
+                return wrapper;
+            }
+            public ListBoxWrapper ListBox(string text,int x, int y, int? width = null, int? height = null, PyObject handler = null)
+            {
+                var lb = _api.CreateListBox(PluginName, x, y,text, width, height);
+                var wrapper = new ListBoxWrapper(lb, _api.Form, handler);
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
@@ -185,6 +190,21 @@ namespace RSBot.Python.Components.API.GUI
             AddControl(pluginName, cb);
             return cb;
         }
+        private ListBox CreateListBox(string pluginName, int x, int y, string? text = null, int? width = null, int? height = null)
+        {
+            ListBox lb = new ListBox
+            {
+                Left = x,
+                Top = y,
+                Width = 150,
+                Text = text,
+            };
+            if (height.HasValue) lb.Height = height.Value;
+            if (width.HasValue) lb.Width = width.Value;
+
+            AddControl(pluginName, lb);
+            return lb;
+        }
 
 
         // ---------------------------------------------------------
@@ -223,11 +243,9 @@ namespace RSBot.Python.Components.API.GUI
             {
                 dynamic sys = Py.Import("sys");
 
-                // pycross löschen, wenn vorhanden
                 if (sys.modules.__contains__("rsbot"))
                     sys.modules.pop("rsbot", null);
 
-                // Alle Plugin-Module entfernen
                 dynamic listFunc = Py.Import("list");
                 dynamic modulesList = listFunc.Invoke(sys.modules.keys());
 

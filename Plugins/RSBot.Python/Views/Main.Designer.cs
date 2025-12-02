@@ -37,13 +37,13 @@ partial class Main
         tcPlugin = new SDUI.Controls.TabControl();
         tpPlugins = new TabPage();
         dgvPlugin = new DataGridView();
+        tbPluginLog = new RichTextBox();
         ColEnabled = new DataGridViewCheckBoxColumn();
         ColName = new DataGridViewTextBoxColumn();
         ColDescription = new DataGridViewTextBoxColumn();
         ColAuthor = new DataGridViewTextBoxColumn();
         ColVersion = new DataGridViewTextBoxColumn();
         FileName = new DataGridViewTextBoxColumn();
-        tbPluginLog = new RichTextBox();
         mainPanel.SuspendLayout();
         flowLayoutPanel1.SuspendLayout();
         tcPlugin.SuspendLayout();
@@ -143,6 +143,7 @@ partial class Main
         // 
         dgvPlugin.AllowUserToAddRows = false;
         dgvPlugin.AllowUserToDeleteRows = false;
+        dgvPlugin.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
         dataGridViewCellStyle1.BackColor = SystemColors.Control;
         dataGridViewCellStyle1.Font = new Font("Segoe UI", 9F);
@@ -164,54 +165,6 @@ partial class Main
         dgvPlugin.Size = new Size(586, 330);
         dgvPlugin.TabIndex = 0;
         // 
-        // ColEnabled
-        // 
-        ColEnabled.HeaderText = "Enabled";
-        ColEnabled.MinimumWidth = 6;
-        ColEnabled.Name = "ColEnabled";
-        ColEnabled.Width = 80;
-        // 
-        // ColName
-        // 
-        ColName.HeaderText = "Name";
-        ColName.MinimumWidth = 6;
-        ColName.Name = "ColName";
-        ColName.ReadOnly = true;
-        ColName.Width = 125;
-        // 
-        // ColDescription
-        // 
-        ColDescription.HeaderText = "Description";
-        ColDescription.MinimumWidth = 6;
-        ColDescription.Name = "ColDescription";
-        ColDescription.ReadOnly = true;
-        ColDescription.Width = 160;
-        // 
-        // ColAuthor
-        // 
-        ColAuthor.HeaderText = "Author";
-        ColAuthor.MinimumWidth = 6;
-        ColAuthor.Name = "ColAuthor";
-        ColAuthor.ReadOnly = true;
-        ColAuthor.Width = 125;
-        // 
-        // ColVersion
-        // 
-        ColVersion.HeaderText = "Version";
-        ColVersion.MinimumWidth = 6;
-        ColVersion.Name = "ColVersion";
-        ColVersion.ReadOnly = true;
-        ColVersion.Width = 125;
-        // 
-        // FileName
-        // 
-        FileName.HeaderText = "FileName";
-        FileName.MinimumWidth = 6;
-        FileName.Name = "FileName";
-        FileName.ReadOnly = true;
-        FileName.Visible = false;
-        FileName.Width = 125;
-        // 
         // tbPluginLog
         // 
         tbPluginLog.Dock = DockStyle.Bottom;
@@ -220,6 +173,54 @@ partial class Main
         tbPluginLog.Size = new Size(600, 99);
         tbPluginLog.TabIndex = 0;
         tbPluginLog.Text = "";
+        // 
+        // ColEnabled
+        // 
+        ColEnabled.FillWeight = 12F;
+        ColEnabled.HeaderText = "Enabled";
+        ColEnabled.MinimumWidth = 6;
+        ColEnabled.Name = "ColEnabled";
+        // 
+        // ColName
+        // 
+        ColName.FillWeight = 20F;
+        ColName.HeaderText = "Name";
+        ColName.MinimumWidth = 6;
+        ColName.Name = "ColName";
+        ColName.ReadOnly = true;
+        // 
+        // ColDescription
+        // 
+        ColDescription.FillWeight = 40F;
+        ColDescription.HeaderText = "Description";
+        ColDescription.MinimumWidth = 6;
+        ColDescription.Name = "ColDescription";
+        ColDescription.ReadOnly = true;
+        // 
+        // ColAuthor
+        // 
+        ColAuthor.FillWeight = 15F;
+        ColAuthor.HeaderText = "Author";
+        ColAuthor.MinimumWidth = 6;
+        ColAuthor.Name = "ColAuthor";
+        ColAuthor.ReadOnly = true;
+        // 
+        // ColVersion
+        // 
+        ColVersion.FillWeight = 15F;
+        ColVersion.HeaderText = "Version";
+        ColVersion.MinimumWidth = 6;
+        ColVersion.Name = "ColVersion";
+        ColVersion.ReadOnly = true;
+        // 
+        // FileName
+        // 
+        FileName.FillWeight = 1F;
+        FileName.HeaderText = "FileName";
+        FileName.MinimumWidth = 6;
+        FileName.Name = "FileName";
+        FileName.ReadOnly = true;
+        FileName.Visible = false;
         // 
         // Main
         // 

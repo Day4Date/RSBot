@@ -23,23 +23,40 @@ namespace RSBot.Python.Components.API.GUI.Wrapper
                 action();
         }
 
-        public void SetVisible(bool visible)
+        private void SetVisible(bool visible)
         {
             Invoke(() => Control.Visible = visible);
         }
 
-        public void SetText(string text)
+        private void SetText(string text)
         {
             Invoke(() => Control.Text = text);
         }
 
-        public void SetEnabled(bool enabled)
+        private void SetEnabled(bool enabled)
         {
             Invoke(() => Control.Enabled = enabled);
         }
-        public void Move(int x, int y)
+        private void Move(int x, int y)
         {
             Invoke(() => Control.Location = new System.Drawing.Point(x, y));
+        }
+
+        public void set_visible(bool visible)
+        {
+            SetVisible(visible);
+        }
+        public void set_text(string text)
+        {
+            SetText(text);
+        }
+        public void set_enabled(bool enabled)
+        {
+            SetEnabled(enabled);
+        }
+        public void move_position(int x, int y)
+        {
+            Move(x, y);
         }
     }
 }
