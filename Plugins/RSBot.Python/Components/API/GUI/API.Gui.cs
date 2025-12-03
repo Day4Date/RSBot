@@ -86,6 +86,13 @@ namespace RSBot.Python.Components.API.GUI
                 _api._activeControls.Add(wrapper);
                 return wrapper;
             }
+            public RadioButtonWrapper RadioButton(string text, int x, int y, int? width = null, int? height = null, PyObject handler = null)
+            {
+                var rb = _api.CreateRadioButton(PluginName, x, y, text, width, height);
+                var wrapper = new RadioButtonWrapper(rb, _api.Form, handler);
+                _api._activeControls.Add(wrapper);
+                return wrapper;
+            }
         }
 
         // ---------------------------------------------------------
@@ -205,11 +212,43 @@ namespace RSBot.Python.Components.API.GUI
             AddControl(pluginName, lb);
             return lb;
         }
+        private RadioButton CreateRadioButton(string pluginName, int x, int y, string text, int? width = null, int? height = null)
+        {
+            RadioButton rb = new RadioButton { Text = text, Left = x, Top = y, AutoSize = true };
+            if (width.HasValue) rb.Width = width.Value;
+            if (height.HasValue) rb.Height = height.Value;
+            AddControl(pluginName, rb);
+            return rb;
+        }
 
 
         // ---------------------------------------------------------
         // RESET SYSTEM
         // ---------------------------------------------------------
+        public void ResetPlugin(string pluginName)
+        {
+            if (_form == null) return;
+
+            _form.Invoke(new Action(() =>
+            {
+                if (_pluginPages.TryGetValue(pluginName, out var page))
+                {
+                    foreach (Control c in page.Controls)
+                        c.Dispose();
+
+                    page.Controls.Clear();
+
+                    if (_form.tcPlugin.TabPages.Contains(page))
+                        _form.tcPlugin.TabPages.Remove(page);
+
+                    page.Dispose();
+                }
+
+                _pluginPages.Remove(pluginName);
+            }));
+
+            _form.tcPlugin.Refresh();
+        }
 
         public void ClearAllControls()
         {

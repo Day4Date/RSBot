@@ -65,6 +65,42 @@ namespace RSBot.Python.Plugins
                 }
             });
         }
+        public void UnloadPlugin(string fileName, Action<string> log)
+        {
+            using (Py.GIL())
+            {
+                try
+                {
+                    // Modulname so wie beim Laden
+                    string moduleName = "plugin_" + Path.GetFileNameWithoutExtension(fileName);
+
+                    // 1) aus sys.modules entfernen
+                    dynamic sys = Py.Import("sys");
+                    if (sys.modules.__contains__(moduleName))
+                        sys.modules.pop(moduleName, null);
+
+                    // 2) aus _loadedPlugins entfernen
+                    _loadedPlugins.RemoveAll(p =>
+                    {
+                        try
+                        {
+                            return p.GetAttr("__name__").ToString() == moduleName;
+                        }
+                        catch { return false; }
+                    });
+
+                    // 3) GC triggern
+                    dynamic gc = Py.Import("gc");
+                    gc.collect();
+
+                    log($"Plugin entladen: {fileName}");
+                }
+                catch (Exception ex)
+                {
+                    log($"[Unload Fehler] {fileName}: {ex.Message}");
+                }
+            }
+        }
 
         public void ResetPlugins()
         {

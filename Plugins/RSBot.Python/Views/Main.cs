@@ -1,9 +1,6 @@
 ﻿using Python.Runtime;
-using RSBot.Core;
-using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Network;
-using RSBot.Core.Objects;
 using RSBot.Core.Objects.Spawn;
 using RSBot.Python.Components.API.GUI;
 using RSBot.Python.Components.API.ModuleLoader;
@@ -11,13 +8,10 @@ using RSBot.Python.Components.Loader;
 using RSBot.Python.Plugins;
 using SDUI.Controls;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
-using static Python.Runtime.TypeSpec;
 
 namespace RSBot.Python.Views;
 
@@ -46,6 +40,11 @@ public partial class Main : DoubleBufferedControl
     }
     private void WireEvents()
     {
+        dgvPlugin.CurrentCellDirtyStateChanged += (s, e) =>
+        {
+            if (dgvPlugin.IsCurrentCellDirty)
+                dgvPlugin.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        };
         dgvPlugin.CellValueChanged += (s, e) =>
         {
             if (e.RowIndex < 0 || e.ColumnIndex != 0) return;
@@ -53,6 +52,8 @@ public partial class Main : DoubleBufferedControl
             var row = dgvPlugin.Rows[e.RowIndex];
             bool isEnabled = Convert.ToBoolean(row.Cells[0].Value);
             string fileName = row.Cells[5].Value.ToString();
+            string pluginName = row.Cells[1].Value.ToString();
+
             if (isEnabled)
             {
                 AppendLog($"Aktiviere Plugin: {fileName}");
@@ -61,7 +62,11 @@ public partial class Main : DoubleBufferedControl
             else
             {
                 AppendLog($"Deaktiviere Plugin: {fileName}");
-                ResetPythonPlugins();
+                
+                var gui = ModuleLoader.Get("gui") as WFAPI;
+                gui?.ResetPlugin(pluginName);
+
+                _pyPlugins.UnloadPlugin(fileName, AppendLog);
             }
         };
     }
