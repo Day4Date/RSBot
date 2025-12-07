@@ -2,9 +2,12 @@
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Extensions;
+using RSBot.Core.Objects;
+using RSBot.Core.Objects.Skill;
 using RSBot.Core.Objects.Spawn;
 using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
+using System;
 using System.Collections.Generic;
 
 namespace RSBot.Python.Components.API.Core.Entity
@@ -47,7 +50,7 @@ namespace RSBot.Python.Components.API.Core.Entity
                 pyItem.SetItem(new PyString("region_name"), new PyString(Game.ReferenceManager.GetTranslation(entry.Position.Region.ToString())));
                 pyItem.SetItem(new PyString("distance"), new PyString(entry.DistanceToPlayer.ToString()));
                 pyItem.SetItem(new PyString("hp"), new PyString(entry.Health.ToString()));
-                pyItem.SetItem(new PyString("max_hp"), new PyString(entry.MaxHealth.ToString()));                
+                pyItem.SetItem(new PyString("max_hp"), new PyString(entry.MaxHealth.ToString()));
                 list.Append(pyItem);
             }
 
@@ -103,7 +106,7 @@ namespace RSBot.Python.Components.API.Core.Entity
                 if (Game.Player == null)
                 {
                     return result;
-                }    
+                }
                 if (SpawnManager.TryGetEntities<SpawnedNpc>(out var npc))
                 {
                     result = BuildNPCList(npc);
@@ -120,7 +123,7 @@ namespace RSBot.Python.Components.API.Core.Entity
                 {
                     return result;
                 }
-                
+
                 result.SetItem(new PyString("name"), new PyString(Game.Player.Name));
                 result.SetItem(new PyString("uid"), new PyInt(Game.Player.UniqueId));
                 result.SetItem(new PyString("model"), new PyInt(Game.Player.Id));
@@ -141,6 +144,103 @@ namespace RSBot.Python.Components.API.Core.Entity
                 return result;
             }
         }
+        private PyDict GetPositionTuple()
+        {
+            using (Py.GIL())
+            {
+                var result = new PyDict();
+                if (Game.Player == null)
+                {
+                    return result;
+                }
+
+                Position position = Game.Player.Position;
+
+                result.SetItem("x", new PyFloat(position.X));
+                result.SetItem("y", new PyFloat(position.Y));
+                result.SetItem("z", new PyFloat(position.ZOffset));
+                result.SetItem("region", new PyString(position.Region.ToString()));
+
+                return result;
+            }
+        }
+        private PyList GetActiveSkills()
+        {
+            using (Py.GIL())
+            {
+                var result = new PyList();
+                if (Game.Player == null)
+                {
+                    return result;
+                }
+                foreach (var skill in Game.Player.State.ActiveBuffs)
+                {
+                    var pySkill = new PyDict();
+
+                    pySkill.SetItem(new PyString("id"), new PyInt(skill.Id));
+                    pySkill.SetItem(new PyString("name"), new PyString(skill.Record.GetRealName()));
+                    pySkill.SetItem(new PyString("servername"), new PyString(skill.Record.UI_SkillName));
+                    pySkill.SetItem(new PyString("can_cast"), new PyString(skill.CanBeCasted.ToString()));
+                    pySkill.SetItem(new PyString("cooldown"), new PyString(skill.HasCooldown.ToString()));
+                    result.Append(pySkill);
+                }
+                return result;
+            }
+        }
+        private PyList GetSkills()
+        {
+            using (Py.GIL())
+            {
+                var result = new PyList();
+                if (Game.Player == null)
+                {
+                    return result;
+                }
+                foreach (SkillInfo skill in Game.Player.Skills.KnownSkills)
+                {
+                    var pySkill = new PyDict();
+                    pySkill.SetItem(new PyString("name"), new PyString(skill.Record.GetRealName()));
+                    pySkill.SetItem(new PyString("id"), new PyInt(skill.Id));
+                    pySkill.SetItem(new PyString("servername"), new PyString(skill.Record.UI_SkillName));
+                    pySkill.SetItem(new PyString("can_cast"), new PyString(skill.CanBeCasted.ToString()));
+                    pySkill.SetItem(new PyString("on_cooldown"), new PyString(skill.HasCooldown.ToString()));
+                    pySkill.SetItem(new PyString("reuse_time"), new PyInt(skill.Record.Action_ReuseDelay));
+                    pySkill.SetItem(new PyString("duration"), new PyString(skill.Record.Action_ActionDuration.ToString()));
+                    pySkill.SetItem(new PyString("mastery"), new PyString(Game.ReferenceManager.GetRefSkillMastery(Convert.ToUInt32(skill.Record.ReqCommon_Mastery1)).Name));
+                    pySkill.SetItem(new PyString("mastery_id"), new PyInt(skill.Record.ReqCommon_Mastery1));
+                    pySkill.SetItem(new PyString("group"), new PyString(skill.Record.Basic_Group));
+                    pySkill.SetItem(new PyString("level"), new PyString(skill.Record.Basic_Level.ToString()));
+                    pySkill.SetItem(new PyString("type"), new PyString( skill.IsAttack ? "Attack" :
+                                                                        skill.IsDot ? "Dot" :
+                                                                        skill.IsImbue ? "Imbue" :
+                                                                        skill.IsPassive ? "Passive" :""));
+                    
+                    result.Append(pySkill);
+                }
+                return result;
+            }
+        }
+        private PyList GetMastery()
+        {
+            using (Py.GIL())
+            {
+                var result = new PyList();
+                if (Game.Player == null)
+                {
+                    return result;
+                }
+                foreach (MasteryInfo mastery in Game.Player.Skills.Masteries)
+                {
+                    var pySkill = new PyDict();
+                    pySkill.SetItem(new PyString("name"), new PyString(Game.ReferenceManager.GetRefSkillMastery(Convert.ToUInt32(mastery.Id)).Name));
+                    pySkill.SetItem(new PyString("id"), new PyInt(mastery.Id));
+                    pySkill.SetItem(new PyString("level"), new PyInt(mastery.Level));
+
+                    result.Append(pySkill);
+                }
+                return result;
+            }
+        }
         public PyList get_monsters()
         {
             return GetMonsters();
@@ -152,6 +252,22 @@ namespace RSBot.Python.Components.API.Core.Entity
         public PyDict get_character()
         {
             return GetCharacter();
+        }
+        public PyDict get_position()
+        {
+            return GetPositionTuple();
+        }
+        public PyList get_active_skills()
+        {
+            return GetActiveSkills();
+        }
+        public PyList get_skills()
+        {
+            return GetSkills();
+        }
+        public PyList get_mastery()
+        {
+            return GetMastery();
         }
     }
 }
