@@ -5,10 +5,12 @@ using RSBot.Core.Extensions;
 using RSBot.Core.Objects;
 using RSBot.Core.Objects.Skill;
 using RSBot.Core.Objects.Spawn;
+using RSBot.General.Components;
 using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace RSBot.Python.Components.API.Core.Entity
 {
@@ -123,8 +125,8 @@ namespace RSBot.Python.Components.API.Core.Entity
                 {
                     return result;
                 }
-
                 result.SetItem(new PyString("name"), new PyString(Game.Player.Name));
+                result.SetItem(new PyString("server"), new PyString(Serverlist.Joining.Name));
                 result.SetItem(new PyString("uid"), new PyInt(Game.Player.UniqueId));
                 result.SetItem(new PyString("model"), new PyInt(Game.Player.Id));
                 result.SetItem(new PyString("x"), new PyFloat(Game.Player.Position.X));

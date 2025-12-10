@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj" />
 		<ProjectReference Include="..\..\SDUI\SDUI\SDUI.csproj" />
+		<ProjectReference Include="..\RSBot.General\RSBot.General.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Components\API\Core\Chat\" />
