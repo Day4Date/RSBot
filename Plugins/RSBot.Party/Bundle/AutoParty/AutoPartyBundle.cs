@@ -163,14 +163,20 @@ internal class AutoPartyBundle
             if (Config.LeaveIfMasterNotName != Game.Party.Leader.Name)
                 Game.Party.Leave();
 
+        // Don't try to invite if we can't invite
         if (!Game.Party.CanInvite)
+            return;
+
+        // Don't invite if both InviteAll and InviteFromList are disabled
+        if (!Config.InviteAll && !Config.InviteFromList)
             return;
 
         var limit = 8;
         if (!Game.Party.Settings.ExperienceAutoShare && !Game.Party.Settings.ItemAutoShare)
             limit = 4;
 
-        if (Game.Party.Members?.Count > limit)
+        // Only check party member count if already in a party
+        if (Game.Party.IsInParty && Game.Party.Members?.Count >= limit)
             return;
 
         if (Config.OnlyAtTrainingPlace && Game.Player.Movement.Source.DistanceTo(Config.CenterPosition) > 50)
@@ -181,7 +187,12 @@ internal class AutoPartyBundle
 
         foreach (var player in players)
         {
+            // Skip if player is already in our party
             if (Game.Party.IsInParty && Game.Party.GetMemberByName(player.Name) != null)
+                continue;
+
+            // Skip ourselves
+            if (player.Name == Game.Player.Name)
                 continue;
 
             if (Config.InviteAll)
@@ -190,7 +201,7 @@ internal class AutoPartyBundle
                 continue;
             }
 
-            if (Config.PlayerList.Contains(player.Name) && Config.InviteFromList)
+            if (Config.InviteFromList && Config.PlayerList.Contains(player.Name))
                 Game.Party.Invite(player.UniqueId);
         }
     }

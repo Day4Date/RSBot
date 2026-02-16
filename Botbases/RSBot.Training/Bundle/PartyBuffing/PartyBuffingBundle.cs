@@ -72,11 +72,15 @@ internal class PartyBuffingBundle : IBundle
                 if (skill == null || skill.HasCooldown)
                     continue;
 
-                if (!skill.Record.TargetGroup_Ally &&
-                    skill.Record.TargetGroup_Party &&
-                    !(Game.Party?.Members?.Any(p => p.Name == member.Name) ?? false))
+                // Check if the skill can target this player:
+                // - If skill targets allies (TargetGroup_Ally), we can buff any nearby player
+                // - If skill targets party only (TargetGroup_Party), player must be in our party
+                if (skill.Record.TargetGroup_Party && !skill.Record.TargetGroup_Ally)
                 {
-                    continue;
+                    if (!(Game.Party?.Members?.Any(p => p.Name == member.Name) ?? false))
+                    {
+                        continue;
+                    }
                 }
 
                 var isActive = member.State.HasActiveBuff(skill, out var info);

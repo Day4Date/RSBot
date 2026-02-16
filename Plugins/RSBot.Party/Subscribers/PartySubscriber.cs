@@ -29,6 +29,10 @@ internal class PartySubscriber
 
         Log.NotifyLang("PartyPlayerInvite", Game.AcceptanceRequest.Player.Name);
 
+        //Check if we are already in a party - don't auto-accept if we're already in a party
+        if (Game.Party.IsInParty)
+            return false;
+
         //Check if we are near the training place
         if (
             Container.AutoParty.Config.OnlyAtTrainingPlace
@@ -36,14 +40,18 @@ internal class PartySubscriber
         )
             return false;
 
-        //Check if the inviting player matches out party list
+        //Check if the inviting player matches our party list
         if (
             Container.AutoParty.Config.AcceptFromList
             && Container.AutoParty.Config.PlayerList.Contains(Game.AcceptanceRequest.Player.Name)
         )
             return true;
 
-        return Container.AutoParty.Config.AcceptAll;
+        //Accept all invitations if enabled
+        if (Container.AutoParty.Config.AcceptAll)
+            return true;
+
+        return false;
     }
 
     /// <summary>
