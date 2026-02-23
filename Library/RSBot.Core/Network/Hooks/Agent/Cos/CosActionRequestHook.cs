@@ -28,12 +28,8 @@ internal class CosActionRequestHook : IPacketHook
         var uniqueId = packet.ReadUInt();
         var type = packet.ReadByte();
 
-        if (
-            Kernel.Bot.Running
-            && Game.Player.HasActiveAbilityPet
-            && Game.Player.AbilityPet.UniqueId == uniqueId
-            && type == 0x08
-        )
+        if (Kernel.Bot.Running && Game.Player.HasActiveAbilityPet && Game.Player.AbilityPet.UniqueId == uniqueId &&
+            type == 0x08)
             return null;
 
         return packet;

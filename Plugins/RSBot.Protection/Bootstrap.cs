@@ -1,32 +1,21 @@
-﻿using System.Windows.Forms;
+﻿using Avalonia.Controls;
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Plugins;
 using RSBot.Protection.Components.Pet;
 using RSBot.Protection.Components.Player;
 using RSBot.Protection.Components.Town;
+using RSBot.Protection.Views;
 
 namespace RSBot.Protection;
 
 public class Bootstrap : IPlugin
 {
     /// <inheritdoc />
-    public string Author => "RSBot Team";
+    public string InternalName => "RSBot.Protection";
 
     /// <inheritdoc />
-    public string Description => "Provides various features to protect your character while botting, such as auto-healing, and more...";
-
-    /// <inheritdoc />
-    public string Name => "RSBot.Protection";
-
-    /// <inheritdoc />
-    public string Title => "Protection";
-
-    /// <inheritdoc />
-    public string Version => "1.0.0";
-
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
+    public string DisplayName => "Protection";
 
     /// <inheritdoc />
     public bool DisplayAsTab => true;
@@ -62,35 +51,14 @@ public class Bootstrap : IPlugin
         NoHealthPotionsHandler.Initialize();
         LevelUpHandler.Initialize();
         DurabilityLowHandler.Initialize();
-        FatigueHandler.Initialize();
     }
 
     /// <inheritdoc />
-    public Control View => Views.View.Instance;
+    public Control View => Main.Instance;
 
     /// <inheritdoc />
     public void Translate()
     {
         LanguageManager.Translate(View, Kernel.Language);
-    }
-
-    /// <inheritdoc />
-    public void OnLoadCharacter()
-    {
-        // do nothing
-    }
-
-    /// <inheritdoc />
-    public void Enable()
-    {
-        if (View != null)
-            View.Enabled = true;
-    }
-
-    /// <inheritdoc />
-    public void Disable()
-    {
-        if (View != null)
-            View.Enabled = false;
     }
 }

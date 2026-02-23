@@ -69,11 +69,9 @@ public class ScriptManager
         CommandHandlers = new List<IScriptCommand>(10);
 
         var type = typeof(IScriptCommand);
-        var types = AppDomain
-            .CurrentDomain.GetAssemblies()
+        var types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
-            .ToArray();
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface).ToArray();
 
         foreach (var handler in types)
         {
@@ -163,11 +161,9 @@ public class ScriptManager
             var arguments = scriptLine.Split(' ');
             var commandName = arguments.Length == 0 ? scriptLine : arguments[0];
 
-            if (
-                string.IsNullOrEmpty(commandName)
+            if (string.IsNullOrEmpty(commandName)
                 || commandName.Trim().StartsWith("//")
-                || commandName.Trim().StartsWith("#")
-            )
+                || commandName.Trim().StartsWith("#"))
                 continue; //No command name given / empty line
 
             var handler = CommandHandlers.FirstOrDefault(h => h.Name == commandName);
@@ -181,12 +177,8 @@ public class ScriptManager
             if (handler.IsBusy && Running && !Paused)
             {
                 error = true;
-                LogScriptMessage(
-                    "The script command is still busy, stopping script execution.",
-                    CurrentLineIndex,
-                    LogLevel.Debug,
-                    commandName
-                );
+                LogScriptMessage("The script command is still busy, stopping script execution.", CurrentLineIndex,
+                    LogLevel.Debug, commandName);
 
                 break;
             }
@@ -197,12 +189,8 @@ public class ScriptManager
 
             if (executionResult == false)
             {
-                LogScriptMessage(
-                    "The execution of the script command failed.",
-                    CurrentLineIndex,
-                    LogLevel.Warning,
-                    commandName
-                );
+                LogScriptMessage("The execution of the script command failed.", CurrentLineIndex, LogLevel.Warning,
+                    commandName);
 
                 continue;
             }
@@ -243,9 +231,7 @@ public class ScriptManager
     {
         var walkCommands = Commands.Where(c => c.Trim().StartsWith("move"));
 
-        return walkCommands
-            .Select(command => command.Split(ArgumentSeparator).Skip(1).ToArray())
-            .Select(ParsePosition)
+        return walkCommands.Select(command => command.Split(ArgumentSeparator).Skip(1).ToArray()).Select(ParsePosition)
             .ToList();
     }
 
@@ -256,13 +242,12 @@ public class ScriptManager
     /// <returns></returns>
     private static Position ParsePosition(string[] args)
     {
-        if (
-            !float.TryParse(args[0], out var xOffset)
+        if (!float.TryParse(args[0], out var xOffset)
             || !float.TryParse(args[1], out var yOffset)
             || !float.TryParse(args[2], out var zOffset)
             || !byte.TryParse(args[3], out var xSector)
             || !byte.TryParse(args[4], out var ySector)
-        )
+           )
             return default; //Invalid format
 
         return new Position(xSector, ySector, xOffset, yOffset, zOffset);
@@ -275,12 +260,8 @@ public class ScriptManager
     /// <param name="line">The line.</param>
     /// <param name="level">The level.</param>
     /// <param name="command">The command.</param>
-    private static void LogScriptMessage(
-        string message,
-        int line,
-        LogLevel level = LogLevel.Notify,
-        string command = null
-    )
+    private static void LogScriptMessage(string message, int line, LogLevel level = LogLevel.Notify,
+        string command = null)
     {
         if (command == null)
             command = "<none>";
@@ -303,12 +284,10 @@ public class ScriptManager
         {
             line++;
 
-            if (
-                command.Trim().StartsWith("//")
-                || command.Trim().StartsWith("#")
-                || !command.StartsWith("move")
-                || string.IsNullOrWhiteSpace(command)
-            )
+            if (command.Trim().StartsWith("//") ||
+                command.Trim().StartsWith("#") ||
+                !command.StartsWith("move") ||
+                string.IsNullOrWhiteSpace(command))
                 continue;
 
             var args = command.Split(ArgumentSeparator).Skip(1).ToArray();

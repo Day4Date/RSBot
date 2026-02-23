@@ -53,10 +53,7 @@ public struct RID : IEquatable<RID>
     public bool IsDungeon
     {
         get { return Convert.ToBoolean((_value & DUNGEON_MASK) >> DUNGEON_OFFSET); }
-        set
-        {
-            _value = (ushort)((_value & ~DUNGEON_MASK) | ((Convert.ToByte(value) << DUNGEON_OFFSET) & DUNGEON_MASK));
-        }
+        set { _value = (ushort)((_value & ~DUNGEON_MASK) | ((Convert.ToByte(value) << DUNGEON_OFFSET) & DUNGEON_MASK)); }
     }
 
     public Vector3 Position => new Vector3(this.WorldX, 0.0f, this.WorldZ);
@@ -68,9 +65,7 @@ public struct RID : IEquatable<RID>
             if (this.IsDungeon)
                 return 0.0f;
 
-            return (
-                    this.X /*- CenterX*/
-                ) * Width;
+            return (this.X /*- CenterX*/) * Width;
         }
     }
 
@@ -81,9 +76,7 @@ public struct RID : IEquatable<RID>
             if (this.IsDungeon)
                 return 0.0f;
 
-            return (
-                    this.Z /*- CenterZ*/
-                ) * Length;
+            return (this.Z /*- CenterZ*/) * Length;
         }
     }
 

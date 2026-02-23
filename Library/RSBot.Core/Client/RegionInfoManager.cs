@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using RSBot.Core.Client.ReferenceObjects.RegionInfo;
 using RSBot.Core.Objects;
+using RSBot.Core.Client.ReferenceObjects.RegionInfo;
 
 namespace RSBot.Core.Client;
 
@@ -26,7 +26,7 @@ public class RegionInfoManager
         using var reader = new StreamReader(stream);
 
         //Older sro -> Uses groups
-        if (Game.ClientType < GameClientType.Chinese_Old)
+        if (Game.ClientType < GameClientType.Chinese)
         {
             while (!reader.EndOfStream)
             {

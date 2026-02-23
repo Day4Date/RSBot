@@ -28,7 +28,10 @@ internal class PartyCreateFromMatching : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        Game.Party = new Objects.Party.Party { Members = new List<PartyMember>() };
+        Game.Party = new Objects.Party.Party
+        {
+            Members = new List<PartyMember>()
+        };
 
         packet.ReadByte(); //FF
 

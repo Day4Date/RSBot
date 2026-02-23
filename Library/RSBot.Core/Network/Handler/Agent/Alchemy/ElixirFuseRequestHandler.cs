@@ -6,6 +6,7 @@ internal class ElixirFuseRequestHandler : IPacketHandler
 
     public PacketDestination Destination => PacketDestination.Server;
 
+
     public void Invoke(Packet packet)
     {
         GenericAlchemyRequestHandler.Invoke(packet);

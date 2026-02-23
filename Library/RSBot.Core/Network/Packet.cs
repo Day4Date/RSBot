@@ -1,7 +1,7 @@
-﻿using System;
+﻿using RSBot.Core.Extensions;
+using System;
 using System.IO;
 using System.Text;
-using RSBot.Core.Extensions;
 
 namespace RSBot.Core.Network
 {
@@ -233,15 +233,7 @@ namespace RSBot.Core.Network
         /// <param name="offset">The offset.</param>
         /// <param name="length">The length.</param>
         /// <exception cref="PacketException">Packets cannot both be massive and encrypted!</exception>
-        public Packet(
-            ushort opcode,
-            bool encrypted,
-            bool massive,
-            byte[] bytes,
-            int offset,
-            int length,
-            bool locked = false
-        )
+        public Packet(ushort opcode, bool encrypted, bool massive, byte[] bytes, int offset, int length, bool locked = false)
         {
             if (encrypted && massive)
                 throw new Exception("Packets cannot both be massive and encrypted!");
@@ -267,8 +259,7 @@ namespace RSBot.Core.Network
         {
             //lock (_lock)
             {
-                if (Locked)
-                    return;
+                if (Locked) return;
 
                 _readerBytes = _writer.GetSnapshot();
                 _reader = new BinaryReader(new MemoryStream(_readerBytes));
@@ -286,8 +277,7 @@ namespace RSBot.Core.Network
         {
             //lock (_lock)
             {
-                if (!Locked)
-                    return;
+                if (!Locked) return;
 
                 _writer = new(new MemoryStream());
                 _writer.Write(_readerBytes);
@@ -318,9 +308,7 @@ namespace RSBot.Core.Network
         public override string ToString()
         {
             if (Locked)
-                return _readerBytes != null
-                    ? "\n0x" + Opcode.ToString("X2") + "\n " + _readerBytes.HexDump() + "\n"
-                    : "Empty";
+                return _readerBytes != null ? "\n0x" + Opcode.ToString("X2") + "\n " + _readerBytes.HexDump() + "\n": "Empty";
 
             //Get the bytes from the writer
             //lock (_lock)
@@ -552,14 +540,13 @@ namespace RSBot.Core.Network
                     throw new Exception("Cannot Read from an unlocked Packet.");
 
                 return new DateTime(
-                    ReadShort(), // Day
-                    ReadShort(), // Month
-                    ReadShort(), // Year
-                    ReadShort(), // Hour
-                    ReadShort(), // Minute
-                    ReadShort(), // Second
-                    ReadInt()
-                ); // MiliSecond
+                            ReadShort(), // Day
+                            ReadShort(), // Month
+                            ReadShort(), // Year
+                            ReadShort(), // Hour
+                            ReadShort(), // Minute
+                            ReadShort(), // Second
+                            ReadInt());  // MiliSecond
             }
         }
 
@@ -581,20 +568,6 @@ namespace RSBot.Core.Network
 
                 if (Game.ClientType == GameClientType.RuSro)
                     codepage = 1251;
-
-                if (Game.ClientType == GameClientType.Chinese || Game.ClientType == GameClientType.Taiwan)
-                    codepage = 950;
-
-                if (Game.ClientType == GameClientType.Korean)
-                    codepage = 949;
-
-                if (Game.ClientType == GameClientType.Japanese)
-                    codepage = 932;
-
-                if (Game.ClientType == GameClientType.Global
-                    || Game.ClientType == GameClientType.VTC_Game
-                    || Game.ClientType == GameClientType.Turkey)
-                    codepage = 65001;
 
                 return Encoding.GetEncoding(codepage).GetString(bytes);
             }
@@ -969,7 +942,6 @@ namespace RSBot.Core.Network
             WriteShort(dateTime.Second);
             WriteInt(dateTime.Millisecond);
         }
-
         /// <summary>
         /// Writes the s byte.
         /// </summary>
@@ -1119,6 +1091,7 @@ namespace RSBot.Core.Network
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="codePage">The Codepage.</param>
+
         public void WriteString(string value, int codePage = 1254)
         {
             //lock (_lock)
@@ -1131,20 +1104,6 @@ namespace RSBot.Core.Network
 
                 if (Game.ClientType == GameClientType.RuSro)
                     codePage = 1251;
-
-                if (Game.ClientType == GameClientType.Chinese || Game.ClientType == GameClientType.Taiwan)
-                    codePage = 950;
-
-                if (Game.ClientType == GameClientType.Korean)
-                    codePage = 949;
-
-                if (Game.ClientType == GameClientType.Japanese)
-                    codePage = 932;
-
-                if (Game.ClientType == GameClientType.Global
-                    || Game.ClientType == GameClientType.VTC_Game
-                    || Game.ClientType == GameClientType.Turkey)
-                    codePage = 65001;
 
                 var bytes = Encoding.GetEncoding(codePage).GetBytes(value);
                 _writer.Write((ushort)bytes.Length);

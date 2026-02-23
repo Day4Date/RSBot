@@ -6,19 +6,6 @@ namespace RSBot.Core.Network;
 
 public class Proxy
 {
-    private enum ConnectionTarget
-    {
-        None = 0,
-        Gateway = 1,
-        Agent = 2,
-    }
-
-    private ConnectionTarget _connectionTarget;
-
-    // Avoid log spam when the remote end drops quickly or connection attempts fail repeatedly.
-    private DateTime _lastGatewayDisconnectLogUtc;
-    private DateTime _lastAgentDisconnectLogUtc;
-
     /// <summary>
     ///     Gets a value indicating whether [client connected].
     /// </summary>
@@ -66,12 +53,6 @@ public class Proxy
     ///     <c>true</c> if [connected to agentserver]; otherwise, <c>false</c>.
     /// </value>
     public bool IsConnectedToAgentserver { get; private set; }
-
-    /// <summary>
-    ///     Gets a value indicating whether we are in the Gateway -> Agent switch phase.
-    ///     In this phase, the Gateway connection is expected to drop and should not trigger relogin/shutdown logic.
-    /// </summary>
-    public bool IsSwitchingToAgentserver { get; private set; }
 
     /// <summary>
     ///     Gets the session.
@@ -125,7 +106,8 @@ public class Proxy
 
         CreateNewServerInstance();
 
-        _connectionTarget = ConnectionTarget.Gateway;
+        IsConnectedToAgentserver = false;
+        IsConnectedToGatewayserver = true;
 
         Server.Connect(_gatewayIp, _gatewayPort);
     }
@@ -138,7 +120,8 @@ public class Proxy
         Log.Notify($"Connecting to agentserver [{_agentIp}:{_agentPort}]...");
         CreateNewServerInstance();
 
-        _connectionTarget = ConnectionTarget.Agent;
+        IsConnectedToGatewayserver = false;
+        IsConnectedToAgentserver = true;
 
         Server.Connect(_agentIp, _agentPort);
     }
@@ -148,23 +131,11 @@ public class Proxy
     /// </summary>
     private void CreateNewServerInstance()
     {
-        // We switch between gateway and agent by replacing the Server instance.
-        // Important: detach handlers before disconnecting the old server; otherwise its delayed
-        // disconnect can be misclassified as the new connection target and trigger relogin.
-        var oldServer = Server;
-        if (oldServer != null)
-        {
-            oldServer.Connected -= Server_OnConnected;
-            oldServer.Disconnected -= Server_OnDisconnected;
-            oldServer.PacketReceived -= Server_OnPacketReceived;
-
-            if (oldServer.IsConnected)
-                oldServer.Disconnect();
-        }
+        if (Server != null && Server.IsConnected)
+            Server.Disconnect();
 
         IsConnectedToGatewayserver = false;
         IsConnectedToAgentserver = false;
-        _connectionTarget = ConnectionTarget.None;
 
         Server = new Server();
         Server.Connected += Server_OnConnected;
@@ -192,8 +163,8 @@ public class Proxy
     private void HandleReceivedPacket(Packet packet, PacketDestination destination)
     {
         //if(packet.Opcode != 0x2002)
-        //   Log.Notify(packet.ToString());
-
+         //   Log.Notify(packet.ToString());
+        
         try
         {
             packet = PacketManager.CallHook(packet, destination);
@@ -295,7 +266,6 @@ public class Proxy
         _agentIp = ip;
         _agentPort = port;
 
-        IsSwitchingToAgentserver = true;
         ConnectToAgentserver();
     }
 
@@ -304,39 +274,22 @@ public class Proxy
     /// </summary>
     private void Server_OnDisconnected()
     {
-        if (IsConnectedToAgentserver || _connectionTarget == ConnectionTarget.Agent)
+        if (IsConnectedToAgentserver)
         {
-            // Only log if we had an established connection or enough time passed (rate limit).
-            if (IsConnectedToAgentserver || (DateTime.UtcNow - _lastAgentDisconnectLogUtc).TotalSeconds >= 3)
-            {
-                _lastAgentDisconnectLogUtc = DateTime.UtcNow;
-                Log.Warn("Disconnected from game server!");
-            }
+            Log.Warn("Disconnected from game server!");
 
             IsConnectedToAgentserver = false;
-            IsSwitchingToAgentserver = false;
 
             Game.Ready = false;
             Game.Started = false;
 
             EventManager.FireEvent("OnAgentServerDisconnected");
         }
-        else if (IsConnectedToGatewayserver || _connectionTarget == ConnectionTarget.Gateway)
+        else if (IsConnectedToGatewayserver)
         {
-            // Capture state before we flip it; allows us to avoid logging disconnects that happen
-            // before an actual connection was established.
-            var wasConnectedToGateway = IsConnectedToGatewayserver;
+            Log.Debug("Disconnected from login server!");
+
             IsConnectedToGatewayserver = false;
-
-            // Gateway disconnect is expected during the Gateway -> Agent switch.
-            if (IsSwitchingToAgentserver)
-                return;
-
-            if (wasConnectedToGateway || (DateTime.UtcNow - _lastGatewayDisconnectLogUtc).TotalSeconds >= 3)
-            {
-                _lastGatewayDisconnectLogUtc = DateTime.UtcNow;
-                Log.Debug("Disconnected from login server!");
-            }
 
             EventManager.FireEvent("OnGatewayServerDisconnected");
         }
@@ -347,19 +300,10 @@ public class Proxy
     /// </summary>
     private void Server_OnConnected()
     {
-        if (_connectionTarget == ConnectionTarget.Gateway)
-        {
-            IsConnectedToGatewayserver = true;
-            IsConnectedToAgentserver = false;
+        if (IsConnectedToGatewayserver)
             EventManager.FireEvent("OnGatewayServerConntected");
-        }
-        else if (_connectionTarget == ConnectionTarget.Agent)
-        {
-            IsConnectedToGatewayserver = false;
-            IsConnectedToAgentserver = true;
-            IsSwitchingToAgentserver = false;
+        else if (IsConnectedToAgentserver)
             EventManager.FireEvent("OnAgentServerConnected");
-        }
     }
 
     #endregion Server

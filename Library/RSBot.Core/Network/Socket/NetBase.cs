@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using RSBot.Core.Network.Protocol;
+using System;
 using System.Net.Sockets;
 using System.Threading;
-using RSBot.Core.Network.Protocol;
 
 namespace RSBot.Core.Network;
 
@@ -88,12 +89,12 @@ public class NetBase(bool isClient = false)
 
     public virtual void OnConnected()
     {
-        Connected?.Invoke();
+        Dispatcher.UIThread.Invoke(() => Connected?.Invoke());
     }
 
     public virtual void OnDisconnected()
     {
-        Disconnected?.Invoke();
+        Dispatcher.UIThread.Invoke(() => Disconnected?.Invoke()); 
     }
 
     public virtual void OnPacketReceived(Packet packet)
@@ -108,12 +109,13 @@ public class NetBase(bool isClient = false)
 
     protected void StartNetWorker()
     {
+
         if (_dispatcherThread == null)
         {
             _dispatcherThread = new Thread(ProcessPacketsThreaded)
             {
                 Name = "Network.PacketProcessor",
-                IsBackground = true,
+                IsBackground = true
             };
             _dispatcherThread.Start();
         }
@@ -140,7 +142,9 @@ public class NetBase(bool isClient = false)
 
             ProcessPacketsThreaded();
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>
@@ -154,7 +158,7 @@ public class NetBase(bool isClient = false)
                 return;
 
             var packets = _protocol.TransferIncoming();
-            if (packets != null)
+            if(packets != null)
             {
                 foreach (var packet in packets)
                 {
@@ -166,9 +170,11 @@ public class NetBase(bool isClient = false)
 
                     try
                     {
-                        OnPacketReceived(packet);
+                        Dispatcher.UIThread.Invoke(() => OnPacketReceived(packet));
                     }
-                    catch (Exception) { }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
 
@@ -184,7 +190,9 @@ public class NetBase(bool isClient = false)
                 _socket.Send(buffer);
             }
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>

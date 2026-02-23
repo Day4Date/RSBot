@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using Avalonia.Media.Imaging;
 using RSBot.Core.Extensions;
 
 namespace RSBot.Core.Client.ReferenceObjects;
@@ -109,26 +111,21 @@ public abstract class RefObjCommon : IReference<uint>
     ///     Gets the icon.
     /// </summary>
     /// <returns></returns>
-    public Image GetIcon()
+    public WriteableBitmap GetIcon()
     {
-        Image bitmap = null;
         try
         {
             var path = $"icon\\{AssocFileIcon}";
-
             if (!Game.MediaPk2.TryGetFile(path, out var file))
-                file = Game.MediaPk2.GetFile("icon\\icon_default.ddj");
+                return Game.MediaPk2.GetFile("icon\\icon_default.ddj").ToImage();
 
-            bitmap = file.ToImage();
+            return file.ToImage();
         }
-        catch { }
-        finally
+        catch
         {
-            if (bitmap == null)
-                bitmap = new Bitmap(24, 24);
         }
 
-        return bitmap;
+        return null;
     }
 
     #region Fields
@@ -164,6 +161,7 @@ public abstract class RefObjCommon : IReference<uint>
         }
     }
 
+
     //public int DecayTime; //time in milliseconds until object despawns
     public ObjectCountry Country; //Indicates where object is from
 
@@ -179,7 +177,6 @@ public abstract class RefObjCommon : IReference<uint>
     //public byte CanRepair; //bool
     //public byte CanRevive; //bool
     public ObjectUseType CanUse; //link to ObjectUseType
-
     //public byte CanThrow; //bool -> only ITEM_FORT_SHOCK_BOMB
 
     //public int Price;

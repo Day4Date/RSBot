@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using Avalonia.Media.Imaging;
 using RSBot.Core.Extensions;
 using RSBot.Core.Objects;
 
@@ -25,26 +27,21 @@ public class RefSkill : IReference<uint>
     ///     Gets the icon.
     /// </summary>
     /// <returns></returns>
-    public Image GetIcon()
+    public WriteableBitmap GetIcon()
     {
-        Image bitmap = null;
-
         try
         {
             var path = $"icon\\{UI_IconFile}";
             if (!Game.MediaPk2.TryGetFile(path, out var file))
-                bitmap = Game.MediaPk2.GetFile("icon\\icon_default.ddj").ToImage();
+                return Game.MediaPk2.GetFile("icon\\icon_default.ddj").ToImage();
 
-            bitmap = file.ToImage();
+            return file.ToImage();
         }
-        catch { }
-        finally
+        catch
         {
-            if (bitmap == null)
-                bitmap = new Bitmap(24, 24);
         }
 
-        return bitmap;
+        return null;
     }
 
     public override string ToString()
@@ -103,7 +100,6 @@ public class RefSkill : IReference<uint>
     public byte ReqCommon_MasteryLevel1;
 
     public byte ReqCommon_MasteryLevel2;
-
     //public short ReqCommon_Str;
     //public short ReqCommon_Int;
 
@@ -115,8 +111,7 @@ public class RefSkill : IReference<uint>
     //public byte ReqLearn_SkillLevel3;
     //public int ReqLearn_SP;
 
-    public byte ReqLearn_Race;
-
+    //public byte ReqLearn_Race;
     //public byte Req_Restriction1;
     //public byte Req_Restriction2;
     public WeaponType ReqCast_Weapon1;
@@ -143,7 +138,7 @@ public class RefSkill : IReference<uint>
     //public byte AI_SkillType;
     public List<int> Params = new(50);
 
-    public PrimarySkillParam Type => (PrimarySkillParam)Params[0];
+    public PrimarySkillParam Type => (PrimarySkillParam) Params[0];
 
     #endregion Fields
 
@@ -162,14 +157,12 @@ public class RefSkill : IReference<uint>
             return false;
 
         //Skip invalid group (MSKILL, HSKILL, TSKILL, GSKILL, PSKILL, P2SKILL) to save memory
-        if (
-            !parser.TryParse(2, out GroupID) /*|| GroupID == 0*/
-        )
+        if (!parser.TryParse(2, out GroupID) /*|| GroupID == 0*/)
             return false;
 
         parser.TryParse(3, out Basic_Code);
         //parser.TryParseString(4, out Basic_Name);
-        parser.TryParse(5, out Basic_Group);
+        //parser.TryParseString(5, out Basic_Group);
         //parser.TryParseInt(6, out Basic_Original);
         parser.TryParse(7, out Basic_Level);
         parser.TryParse(8, out Basic_Activity);
@@ -215,7 +208,7 @@ public class RefSkill : IReference<uint>
         //ReqLearn_SkillLevel2 = byte.Parse(data[44]);
         //ReqLearn_SkillLevel3 = byte.Parse(data[45]);
         //parser.TryParseInt(46, out ReqLearn_SP);
-        parser.TryParse(47, out ReqLearn_Race);
+        //ReqLearn_Race = byte.Parse(data[47]);
         //Req_Restriction1 = byte.Parse(data[48]);
         //Req_Restriction2 = byte.Parse(data[49]);
         parser.TryParse(50, out ReqCast_Weapon1);

@@ -1,404 +1,255 @@
-﻿using RSBot.Core.Event;
-using RSBot.Core.Extensions;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using PeNet;
+using RSBot.Core.Event;
+using RSBot.Core.Extensions;
 using static RSBot.Core.Extensions.NativeExtensions;
 
 namespace RSBot.Core.Components;
 
-public partial class ClientManager
+public class ClientManager
 {
+    /// <summary>
+    ///     The client process
+    /// </summary>
     private static Process _process;
-    private static readonly string GitHubSignatureUrl =
-        "https://raw.githubusercontent.com/myildirimofficial/rsbot/master/client-signatures.cfg";
-
-    private static readonly HttpClient _httpClient = new HttpClient
-    {
-        Timeout = TimeSpan.FromSeconds(10)
-    };
 
     /// <summary>
-    /// Get, has client exited <c>true</c> otherwise; <c>false</c>
+    ///     Get, has client exited <c>true</c> otherwise; <c>false</c>
     /// </summary>
-    public static bool IsRunning => _process?.HasExited == false;
+    public static bool IsRunning => _process != null && !_process.HasExited;
 
-    /// <summary>
-    /// Loads client signatures from GitHub repository
-    /// </summary>
-    private static async Task<Dictionary<GameClientType, string>> LoadSignaturesFromGitHub()
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PROCESS_BASIC_INFORMATION
     {
-        var signatures = new Dictionary<GameClientType, string>();
+        public IntPtr Reserved1;
+        public IntPtr PebBaseAddress;
+        public IntPtr Reserved2_0;
+        public IntPtr Reserved2_1;
+        public IntPtr UniqueProcessId;
+        public IntPtr InheritedFromUniqueProcessId;
+    }
 
-        try
+    [DllImport("ntdll.dll")]
+    private static extern int NtQueryInformationProcess(
+        IntPtr processHandle,
+        int processInformationClass,
+        ref PROCESS_BASIC_INFORMATION processInformation,
+        uint processInformationLength,
+        out uint returnLength);
+
+    static int? GetParentProcessId(Process process)
+    {
+        var pbi = new PROCESS_BASIC_INFORMATION();
+        uint returnLength;
+        int status = NtQueryInformationProcess(
+            process.Handle,
+            0, // ProcessBasicInformation
+            ref pbi,
+            (uint)Marshal.SizeOf(pbi),
+            out returnLength
+        );
+
+        if (status == 0) // STATUS_SUCCESS
         {
-            Log.Notify("Fetching client signatures from GitHub...");
-            var response = await _httpClient.GetStringAsync(GitHubSignatureUrl);
-
-            foreach (var line in response.Split('\n'))
-            {
-                var trimmedLine = line.Trim();
-
-                // Skip empty lines and comments
-                if (string.IsNullOrWhiteSpace(trimmedLine) ||
-                    trimmedLine.StartsWith("#") ||
-                    trimmedLine.StartsWith("//"))
-                    continue;
-
-                var parts = trimmedLine.Split('=', 2);
-                if (parts.Length != 2)
-                    continue;
-
-                var clientTypeName = parts[0].Trim();
-                var signature = parts[1].Replace('"', ' ').Trim();
-
-                if (Enum.TryParse<GameClientType>(clientTypeName, true, out var clientType))
-                {
-                    signatures[clientType] = signature;
-                }
-                else
-                {
-                    Log.Warn($"Unknown client type in signatures: {clientTypeName}");
-                }
-            }
-
-            Log.Notify($"Successfully loaded {signatures.Count} client signatures from GitHub");
-        }
-        catch (HttpRequestException ex)
-        {
-            Log.Error($"Failed to fetch signatures from GitHub: {ex.Message}");
-
-            return [];
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Unexpected error loading signatures: {ex.Message}");
-            return [];
+            return pbi.InheritedFromUniqueProcessId.ToInt32();
         }
 
-        return signatures;
+        return null;
     }
 
     /// <summary>
-    /// Gets the signature for the specified client type
-    /// </summary>
-    private static async Task<string> GetSignature(GameClientType type, Dictionary<GameClientType, string> signatures)
-    {
-        if (signatures.TryGetValue(type, out var signature))
-            return signature;
-
-        throw new ArgumentOutOfRangeException(nameof(type),
-            $"No signature found for client type: {type}");
-    }
-
-    /// <summary>
-    /// Start the game client
+    ///     Start the game client
     /// </summary>
     /// <returns>Has successfully started <c>true</c>; otherwise <c>false</c></returns>
     public static async Task<bool> Start()
     {
         var silkroadDirectory = GlobalConfig.Get<string>("RSBot.SilkroadDirectory");
-        var executable = GlobalConfig.Get<string>("RSBot.SilkroadExecutable");
-        var path = Path.Combine(silkroadDirectory, executable);
+        var path = Path.Combine(
+            silkroadDirectory,
+            GlobalConfig.Get<string>("RSBot.SilkroadExecutable")
+        );
 
-        if (!File.Exists(path))
-        {
-            Log.Error($"Silkroad executable not found: {path}");
-            return false;
-        }
-
-        var libraryDllName = "Client.Library.dll";
-        var fullPath = Path.Combine(Kernel.BasePath, libraryDllName);
-
-        if (!File.Exists(fullPath))
-        {
-            Log.Error($"Client library not found: {fullPath}");
-            return false;
-        }
-
-        var buffer = Encoding.Unicode.GetBytes(fullPath + "\0");
+        string libraryDllName = "Client.Library.dll";
+        string libraryDllFunc = "_DllMain@12";
+        var buffer = Encoding.UTF8.GetBytes(Path.Combine(Kernel.BasePath, libraryDllName));
         var pathLen = (uint)buffer.Length;
 
         var gatewayIndex = GlobalConfig.Get<byte>("RSBot.GatewayIndex");
         var divisionIndex = GlobalConfig.Get<byte>("RSBot.DivisionIndex");
         var contentId = Game.ReferenceManager.DivisionInfo.Locale;
 
-        var args = BuildCommandLineArguments(contentId, divisionIndex, gatewayIndex);
+        var args = $"/{contentId} {divisionIndex} {gatewayIndex} 0";
 
         var si = new STARTUPINFO();
 
-        CreateMutex(0, false, "Silkroad Online Launcher");
-        CreateMutex(0, false, "Ready");
+        var full = $"\"{path}\" {args}";
 
-        // Create suspended process
-        if (!CreateProcess(
-            null,
-            $"\"{path}\" {args}",
-            IntPtr.Zero,
-            IntPtr.Zero,
-            false,
-            CREATE_SUSPENDED,
-            IntPtr.Zero,
-            silkroadDirectory,
-            ref si,
-            out var pi))
-        {
-            Log.Error("Failed to create game process");
-            return false;
-        }
-
-        var semaphore = new Semaphore(0, 1, pi.dwProcessId.ToString());
-
-        try
-        {
-            PrepareTempConfigFile(pi.dwProcessId, divisionIndex);
-
-            var sroProcess = Process.GetProcessById((int)pi.dwProcessId);
-
-            if (RequiresXigncodePatch(Game.ClientType) && !await ApplyXigncodePatch(sroProcess, pi))
-                return false;
-
-            _process = sroProcess;
-
-            if (!InjectClientLibrary(pi, buffer, pathLen))
-            {
-                CleanupProcess(pi);
-                return false;
-            }
-
-            ResumeThread(pi.hThread);
-
-            _process.Refresh();
-            if (_process.HasExited)
-            {
-                Log.Error($"Process exited immediately after start (exit code: 0x{_process.ExitCode:X})");
-                return false;
-            }
-
-            _process.EnableRaisingEvents = true;
-            _process.Exited += ClientProcess_Exited;
-
-            EventManager.FireEvent("OnStartClient");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Failed to start client: {ex.Message}");
-            CleanupProcess(pi);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Builds command line arguments based on client type
-    /// </summary>
-    private static string BuildCommandLineArguments(byte contentId, byte divisionIndex, byte gatewayIndex)
-    {
         if (Game.ClientType == GameClientType.RuSro)
         {
-            var login = GlobalConfig.Get<string>("RSBot.RuSro.login");
-            var password = GlobalConfig.Get<string>("RSBot.RuSro.password");
-            return $"-LOGIN:{login} -PASSWORD:{password}";
-        }
-
-        return $"/{contentId} {divisionIndex} {gatewayIndex} 0";
-    }
-
-    /// <summary>
-    /// Checks if the client type requires XIGNCODE patching
-    /// </summary>
-    private static bool RequiresXigncodePatch(GameClientType clientType)
-    {
-        return clientType == GameClientType.VTC_Game
-            || clientType == GameClientType.Turkey
-            || clientType == GameClientType.Taiwan;
-    }
-
-    /// <summary>
-    /// Injects the client library into the target process
-    /// </summary>
-    private static bool InjectClientLibrary(PROCESS_INFORMATION pi, byte[] buffer, uint pathLen)
-    {
-        var handle = pi.hProcess;
-        if (handle == IntPtr.Zero)
-        {
-            Log.Error("Process handle is invalid");
-            return false;
-        }
-
-        try
-        {
-            var kernelHandle = GetModuleHandleW("kernel32.dll");
-            if (kernelHandle == IntPtr.Zero)
-            {
-                Log.Error("Failed to get kernel32.dll handle");
-                return false;
-            }
-
-            var loadLibAddr = GetProcAddress(kernelHandle, "LoadLibraryW");
-            if (loadLibAddr == IntPtr.Zero)
-            {
-                Log.Error("Failed to get LoadLibraryW address");
-                return false;
-            }
-
-            var remotePath = VirtualAllocEx(
-                handle,
-                IntPtr.Zero,
-                pathLen,
-                MEM_COMMIT | MEM_RESERVE,
-                PAGE_READWRITE);
-
-            if (remotePath == IntPtr.Zero)
-            {
-                Log.Error("Failed to allocate remote memory");
-                return false;
-            }
-
+            AddDllImportToClient(path, libraryDllName, libraryDllFunc);
             try
             {
-                if (!WriteProcessMemory(handle, remotePath, buffer, pathLen, out _))
-                {
-                    Log.Error("Failed to write library path to remote process");
-                    return false;
-                }
-
-                var remoteThread = CreateRemoteThread(
-                    handle,
-                    IntPtr.Zero,
-                    0,
-                    loadLibAddr,
-                    remotePath,
-                    0,
-                    IntPtr.Zero);
-
-                if (remoteThread == IntPtr.Zero)
-                {
-                    Log.Error("Failed to create remote thread");
-                    return false;
-                }
-
-                try
-                {
-                    Log.Debug("Waiting for LoadLibraryW to complete (10s timeout)...");
-                    var waitResult = WaitForSingleObject(remoteThread, 10000);
-                    if (waitResult != 0)
-                    {
-                        Log.Error("LoadLibraryW timed out after 10 seconds. The DLL injection may have deadlocked.");
-                        return false;
-                    }
-
-                    if (!GetExitCodeThread(remoteThread, out var exitCode))
-                    {
-                        Log.Error("Failed to get remote thread exit code");
-                        return false;
-                    }
-
-                    if (exitCode == 0)
-                    {
-                        Log.Error("LoadLibraryW failed: DLL could not be loaded. Verify the library exists and is compatible with the target process.");
-                        return false;
-                    }
-
-                    // NTSTATUS error codes have the high two bits set (0xC0000000+)
-                    if (exitCode >= 0xC0000000)
-                    {
-                        Log.Error($"LoadLibraryW crashed with NTSTATUS 0x{exitCode:X}. The DLL may be incompatible with the target process.");
-                        return false;
-                    }
-
-                    Log.Notify($"Client library injected successfully (module handle: 0x{exitCode:X})");
-                    return true;
-                }
-                finally
-                {
-                    CloseHandle(remoteThread);
-                }
+                File.Copy(Path.Combine(Kernel.BasePath, libraryDllName), Path.Combine(silkroadDirectory, libraryDllName), true);
             }
-            finally
+            catch (IOException)
             {
-                VirtualFreeEx(handle, remotePath, 0, MEM_RELEASE);
+                Log.Debug($"DLL is using, can't replace");
             }
-        }
-        catch (Exception ex) {
-            Log.Error($"DLL injection failed: {ex.Message}");
-            return false;
-        }
-    }
+            string login = GlobalConfig.Get<string>("RSBot.RuSro.login");
+            string password = GlobalConfig.Get<string>("RSBot.RuSro.password");
+            full = $"\"{silkroadDirectory}\\Frost\\sro.exe\" -LOGIN:{login} -PASSWORD:{password} -frostGame \"{path}\" -frostOptions 1 -frostGameNameType silk-ru_live";
+            Log.Debug("Full path: " + full);
 
-    /// <summary>
-    /// Applies an in-memory patch to the XIGNCODE module of the specified process
-    /// </summary>
-    private static async Task<bool> ApplyXigncodePatch(Process process, PROCESS_INFORMATION pi)
-    {
-        try
-        {
-            var signatures = await LoadSignaturesFromGitHub();
-            if (signatures.Count == 0)
-            {
-                Log.Error("No client signatures loaded. Cannot start client.");
+            var result = CreateProcess(
+                null,
+                full,
+                IntPtr.Zero,
+                IntPtr.Zero,
+                false,
+                0,
+                IntPtr.Zero,
+                silkroadDirectory,
+                ref si,
+                out var pi
+            );
+            if (!result)
                 return false;
+
+            Process sroClientProcess;
+            var startTime = DateTime.Now;
+
+            do
+            {
+                Process[] sroClientProcesses = Process.GetProcessesByName("sro_client");
+                sroClientProcess = sroClientProcesses.FirstOrDefault(p => GetParentProcessId(p) == pi.dwProcessId);
+
+                if ((DateTime.Now - startTime).TotalSeconds > 10)
+                {
+                    Log.Error("sro_client.exe was not started in 10 seconds!");
+                    return false;
+                }
+
+                Thread.Sleep(10);
+            } while (sroClientProcess == null);
+
+            SuspendProcess(sroClientProcess);
+
+            PrepareTempConfigFile((uint)sroClientProcess.Id, divisionIndex);
+
+            ResumeProcess(sroClientProcess);
+
+            var kernelHandle = GetModuleHandleA("kernel32.dll");
+
+            var loadLibAddr = GetProcAddress(kernelHandle, "LoadLibraryA");
+            if (loadLibAddr == IntPtr.Zero)
+                return false;
+
+            if (sroClientProcess.HasExited)
+                return await Task.FromResult(false);
+
+            sroClientProcess.EnableRaisingEvents = true;
+            sroClientProcess.Exited += ClientProcess_Exited;
+            _process = sroClientProcess;
+        }
+        else
+        {
+            var result = CreateProcess(null, full, IntPtr.Zero, IntPtr.Zero, false, CREATE_SUSPENDED, IntPtr.Zero,
+            silkroadDirectory, ref si, out var pi);
+            if (!result)
+                return false;
+
+            PrepareTempConfigFile(pi.dwProcessId, divisionIndex);
+
+            var semaphore = new Semaphore(0, 1, pi.dwProcessId.ToString());
+
+            var handle = OpenProcess(PROCESS_ALL_ACCESS, false, pi.dwProcessId);
+            if (handle == IntPtr.Zero)
+                return false;
+
+            var kernelHandle = GetModuleHandleA("kernel32.dll");
+
+            var loadLibAddr = GetProcAddress(kernelHandle, "LoadLibraryA");
+            if (loadLibAddr == IntPtr.Zero)
+                return false;
+
+            var dereercomp = VirtualAllocEx(handle, IntPtr.Zero, pathLen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+            if (dereercomp == IntPtr.Zero)
+                return false;
+
+            if (!WriteProcessMemory(handle, dereercomp, buffer, pathLen, out var numberOfBytesWritten))
+                return false;
+
+            var remoteThread = CreateRemoteThread(handle, IntPtr.Zero, 0, loadLibAddr, dereercomp, 0, IntPtr.Zero);
+            if (remoteThread == IntPtr.Zero)
+                return false;
+
+            var process = Process.GetProcessById((int)pi.dwProcessId);
+            if (process == null || process.HasExited)
+                return false;
+
+            if (Game.ClientType == GameClientType.VTC_Game ||
+                Game.ClientType == GameClientType.Turkey)
+            {
+                var moduleMemory = new byte[process.MainModule.ModuleMemorySize];
+                ReadProcessMemory(process.Handle, process.MainModule.BaseAddress, moduleMemory,
+                    process.MainModule.ModuleMemorySize, out _);
+
+                var patchNop = new byte[] { 0x90, 0x90 };
+                var patchNop2 = new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 };
+                var patchJmp = new byte[] { 0xEB };
+
+                var address = FindPattern(
+                    Game.ClientType == GameClientType.Turkey ?
+                    "6A 00 68 18 3A 3C 01 68 2C 3A 3C 01" :
+                    "6A 00 68 48 A2 38 01 68 5C A2 38 01",
+                    moduleMemory);
+                if (address == IntPtr.Zero)
+                {
+                    Log.Error("XIGNCODE patching error! Maybe signatures are wrong?");
+                    return false;
+                }
+
+                WriteProcessMemory(pi.hProcess, address - 0x6F, patchJmp, 1, out _);
+                WriteProcessMemory(pi.hProcess, address + 0x13, patchJmp, 1, out _);
+                WriteProcessMemory(pi.hProcess, address + 0xC, patchNop2, 5, out _);
+                WriteProcessMemory(pi.hProcess, address + 0x95, patchJmp, 1, out _);
+
+                moduleMemory = null;
+                GC.Collect();
             }
+
+            WaitForSingleObject(remoteThread, uint.MaxValue);
+            VirtualFreeEx(handle, dereercomp, pathLen, MEM_RELEASE);
+
+            CloseHandle(remoteThread);
+            CloseHandle(handle);
 
             ResumeThread(pi.hThread);
-            await Task.Delay(250);
-            SuspendThread(pi.hThread);
+            ResumeThread(pi.hProcess);
 
-            var moduleMemory = new byte[process.MainModule.ModuleMemorySize];
-            if (!ReadProcessMemory(
-                process.Handle,
-                process.MainModule.BaseAddress,
-                moduleMemory,
-                process.MainModule.ModuleMemorySize,
-                out _))
-            {
-                Log.Error("Failed to read process memory for XIGNCODE patch");
-                return false;
-            }
+            if (process.HasExited)
+                return await Task.FromResult(false);
 
-            var signature = await GetSignature(Game.ClientType, signatures);
-            var baseAddress = process.MainModule.BaseAddress.ToInt32();
-            var address = FindPattern(signature, moduleMemory, baseAddress);
-
-            if (address == IntPtr.Zero)
-            {
-                Log.Error("XIGNCODE patching failed! Signature not found.");
-                Log.Error($"Please check if the signature for {Game.ClientType} is correct in the GitHub repository.");
-                return false;
-            }
-
-            // Apply patches
-            var patchJmp = new byte[] { 0xEB };
-            var patchNop2 = new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 };
-
-            WriteProcessMemory(pi.hProcess, address - 0x6F, patchJmp, 1, out _);
-            WriteProcessMemory(pi.hProcess, address + 0x13, patchJmp, 1, out _);
-            WriteProcessMemory(pi.hProcess, address + 0xC, patchNop2, 5, out _);
-            WriteProcessMemory(pi.hProcess, address + 0x95, patchJmp, 1, out _);
-
-            Log.Notify("XIGNCODE patch applied successfully");
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"XIGNCODE patching exception: {ex.Message}");
-        }
-        finally
-        {
-            GC.Collect();
+            process.EnableRaisingEvents = true;
+            process.Exited += ClientProcess_Exited;
+            _process = process;
         }
 
-        return true;
+        EventManager.FireEvent("OnStartClient");
+
+        return await Task.FromResult(true);
     }
 
     /// <summary>
-    /// Kill the game client process
+    ///     Kill the game client process
     /// </summary>
     public static void Kill()
     {
@@ -407,35 +258,39 @@ public partial class ClientManager
 
         try
         {
-            if (_process != null && _process.MainWindowHandle != IntPtr.Zero)
-                _process.Kill();
+            _process.Kill();
         }
-        catch (Exception ex)
+        catch
         {
-            Log.Error($"Failed to kill client process: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// Change client process title
+    ///     Change client process title
     /// </summary>
+    /// <param name="title">The new title</param>
     public static void SetTitle(string title)
     {
-        if (_process != null && _process.MainWindowHandle != IntPtr.Zero)
-            SetWindowText(_process.MainWindowHandle, title);
+        if (_process == null)
+            return;
+
+        SetWindowText(_process.MainWindowHandle, title);
     }
 
     /// <summary>
-    /// Change client visibility
+    ///     Change client visible
     /// </summary>
+    /// <param name="visible">The visible</param>
     public static void SetVisible(bool visible)
     {
-        if (_process != null && _process.MainWindowHandle != IntPtr.Zero)
-            ShowWindow(_process.MainWindowHandle, visible ? SW_SHOW : SW_HIDE);
+        if (visible)
+            ShowWindow(_process.MainWindowHandle, SW_SHOW);
+        else
+            ShowWindow(_process.MainWindowHandle, SW_HIDE);
     }
 
     /// <summary>
-    /// Handles client process exit event
+    ///     Observes the process.
     /// </summary>
     private static void ClientProcess_Exited(object sender, EventArgs e)
     {
@@ -444,105 +299,100 @@ public partial class ClientManager
     }
 
     /// <summary>
-    /// Prepare the config file for loader
+    ///     Prepare the config file for loader
     /// </summary>
+    /// <param name="processId"></param>
+    /// <param name="divisionIndex"></param>
     private static void PrepareTempConfigFile(uint processId, int divisionIndex)
     {
-        try
-        {
-            var tmpConfigFile = $"RSBot_{processId}.tmp";
-            var division = Game.ReferenceManager.DivisionInfo.Divisions[divisionIndex];
-            var gatewayPort = Game.ReferenceManager.GatewayInfo.Port;
-            var redirectIp = "127.0.0.1";
+        var tmpConfigFile = $"RSBot_{processId}.tmp";
 
-            using var writer = new BinaryWriter(
-                new FileStream(
-                    Path.Combine(Path.GetTempPath(), tmpConfigFile),
-                    FileMode.Create));
+        var division = Game.ReferenceManager.DivisionInfo.Divisions[divisionIndex];
+        var gatewayPort = Game.ReferenceManager.GatewayInfo.Port;
 
-            writer.Write(GlobalConfig.Get<bool>("RSBot.Loader.DebugMode"));
-            writer.WriteAscii(redirectIp);
-            writer.Write(Kernel.Proxy.Port);
-            writer.Write(division.GatewayServers.Count);
+        var redirectIp = "127.0.0.1";
+        using var writer =
+            new BinaryWriter(new FileStream(Path.Combine(Path.GetTempPath(), tmpConfigFile), FileMode.OpenOrCreate));
 
-            foreach (var gatewayServer in division.GatewayServers)
-                writer.WriteAscii(gatewayServer);
+        writer.Write(GlobalConfig.Get<bool>("RSBot.Loader.DebugMode"));
+        writer.WriteAscii(redirectIp);
+        writer.Write(Kernel.Proxy.Port);
+        writer.Write(division.GatewayServers.Count);
+        foreach (var gatewayServer in division.GatewayServers)
+            writer.WriteAscii(gatewayServer);
 
-            writer.Write(gatewayPort);
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Failed to prepare temp config file: {ex.Message}");
-        }
+        writer.Write(gatewayPort);
     }
 
-    /// <summary>
-    /// Searches the specified buffer for the first occurrence of a byte pattern
-    /// </summary>
-    private static IntPtr FindPattern(string stringPattern, byte[] buffer, int baseAddress)
+    private static IntPtr FindPattern(string stringPattern, byte[] buffer)
     {
-        try
+        var pattern = stringPattern.Split(' ')
+            .Select(p => byte.Parse(p, NumberStyles.AllowHexSpecifier))
+            .ToArray();
+
+        for (uint i = 0; i < buffer.Length - pattern.Length; i++)
         {
-            var pattern = stringPattern
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => byte.Parse(p, NumberStyles.AllowHexSpecifier))
-                .ToArray();
-
-            var patternLength = pattern.Length;
-            var searchLength = buffer.Length - patternLength;
-
-            for (var i = 0; i < searchLength; i++)
-            {
-                var found = true;
-                for (var j = 0; j < patternLength; j++)
+            var found = true;
+            for (uint j = 0; j < pattern.Length; j++)
+                if (buffer[i + j] != pattern[j])
                 {
-                    if (buffer[i + j] != pattern[j])
-                    {
-                        found = false;
-                        break;
-                    }
+                    found = false;
+                    break;
                 }
 
-                if (found)
-                    return (IntPtr)(baseAddress + i);
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error($"Pattern search failed: {ex.Message}");
+            if (found)
+                return (IntPtr)(0x400000 + i);
         }
 
         return IntPtr.Zero;
     }
 
-    /// <summary>
-    /// Cleanup process handles
-    /// </summary>
-    private static void CleanupProcess(PROCESS_INFORMATION pi)
+    private static void SuspendProcess(Process process)
     {
-        try
+        foreach (ProcessThread thread in process.Threads)
         {
-            if (pi.hThread != IntPtr.Zero)
-                CloseHandle(pi.hThread);
-
-            if (pi.hProcess != IntPtr.Zero)
+            IntPtr threadHandle = OpenThread(THREAD_SUSPEND_RESUME, false, (uint)thread.Id);
+            if (threadHandle != IntPtr.Zero)
             {
-                try
-                {
-                    var process = Process.GetProcessById((int)pi.dwProcessId);
-                    process?.Kill();
-                }
-                catch (ArgumentException)
-                {
-                    // Process has already exited
-                }
-
-                CloseHandle(pi.hProcess);
+                SuspendThread(threadHandle);
+                CloseHandle(threadHandle);
             }
         }
-        catch (Exception ex)
+    }
+
+    private static void ResumeProcess(Process process)
+    {
+        foreach (ProcessThread thread in process.Threads)
         {
-            Log.Error($"Failed to cleanup process: {ex.Message}");
+            IntPtr threadHandle = OpenThread(THREAD_SUSPEND_RESUME, false, (uint)thread.Id);
+            if (threadHandle != IntPtr.Zero)
+            {
+                ResumeThread(threadHandle);
+                CloseHandle(threadHandle);
+            }
+        }
+    }
+
+    private static void AddDllImportToClient(string exePath, string dllName, string funcName)
+    {
+        var peFile = new PeFile(exePath);
+        bool isDllInjected = false;
+
+        foreach (var imp in peFile.ImportedFunctions)
+        {
+            if (imp.DLL.Contains(dllName, StringComparison.OrdinalIgnoreCase))
+                isDllInjected = true;
+        }
+
+        if (!isDllInjected)
+        {
+            peFile.AddImport(dllName, funcName);
+            File.WriteAllBytes(exePath, peFile.RawFile.ToArray());
+            Log.Debug($"Client {exePath} was patched with {dllName}");
+        }
+        else
+        {
+            Log.Debug($"Client {exePath} is already patched with {dllName}. Patching skipped");
         }
     }
 }

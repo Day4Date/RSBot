@@ -24,7 +24,10 @@ internal class BuyGoodsScriptCommand : IScriptCommand
     /// <summary>
     ///     A dictionary of available arguments for this command.
     /// </summary>
-    public Dictionary<string, string> Arguments => new() { { "Codename", "The code name of the NPC" } };
+    public Dictionary<string, string> Arguments => new()
+    {
+        { "Codename", "The code name of the NPC" }
+    };
 
     #endregion Properties
 
@@ -116,10 +119,8 @@ internal class BuyGoodsScriptCommand : IScriptCommand
 
         foreach (var item in items)
         {
-            var canSellToNpc =
-                shopGoods.FirstOrDefault(i =>
-                    Game.ReferenceManager.GetRefPackageItem(i.RefPackageItemCodeName).RefItem.ID == item.ItemId
-                ) == null;
+            var canSellToNpc = shopGoods.FirstOrDefault(i =>
+                Game.ReferenceManager.GetRefPackageItem(i.RefPackageItemCodeName).RefItem.ID == item.ItemId) == null;
 
             if (!canSellToNpc)
                 continue;
@@ -173,10 +174,8 @@ internal class BuyGoodsScriptCommand : IScriptCommand
         var bought = 0;
         var maxSteps = Game.Player.JobTransport.Inventory.Capacity;
         var existingItemsCount = Game.Player.JobTransport.Inventory.GetSumAmount(packageItem.RefItemCodeName);
-        while (
-            !Game.Player.JobTransport.Inventory.Full
-            && (existingItemsCount < TradeConfig.BuyGoodsQuantity || TradeConfig.BuyGoodsQuantity == 0)
-        )
+        while (!Game.Player.JobTransport.Inventory.Full
+               && (existingItemsCount < TradeConfig.BuyGoodsQuantity || TradeConfig.BuyGoodsQuantity == 0))
         {
             //Avoid endless loop
             if (--maxSteps == 0)

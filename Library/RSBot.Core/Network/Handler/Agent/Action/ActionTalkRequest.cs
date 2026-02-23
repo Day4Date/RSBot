@@ -16,7 +16,11 @@ internal class ActionTalkRequest : IPacketHandler
         var entityId = packet.ReadUInt();
         var option = (TalkOption)packet.ReadByte();
 
-        Game.Player.State.DialogState = new DialogState { RequestedNpcId = entityId, TalkOption = option };
+        Game.Player.State.DialogState = new DialogState
+        {
+            RequestedNpcId = entityId,
+            TalkOption = option
+        };
 
         EventManager.FireEvent("OnTalkRequest", entityId, option);
     }

@@ -113,22 +113,14 @@ public class PickupManager
         try
         {
             var flag = UseAbilityPet && Game.Player.HasActiveAbilityPet;
-            if (
-                !SpawnManager.TryGetEntities<SpawnedItem>(
-                    i => Condition(i, centerPosition, radius, flag, flag),
-                    out var entities
-                )
-            )
+            if (!SpawnManager.TryGetEntities<SpawnedItem>(i => Condition(i, centerPosition, radius, flag, flag),
+                    out var entities))
             {
                 RunningPlayerPickup = false;
                 return;
             }
 
-            foreach (
-                var item in entities.OrderBy(item =>
-                    item.Movement.Source.DistanceTo(playerPosition) /*.Take(5)*/
-                )
-            )
+            foreach (var item in entities.OrderBy(item => item.Movement.Source.DistanceTo(playerPosition) /*.Take(5)*/))
             {
                 if (!RunningPlayerPickup)
                     return;
@@ -163,20 +155,15 @@ public class PickupManager
 
         try
         {
-            if (
-                !SpawnManager.TryGetEntities<SpawnedItem>(
-                    i => Condition(i, centerPosition, radius, true),
-                    out var entities
-                )
-            )
+            if (!SpawnManager.TryGetEntities<SpawnedItem>(i => Condition(i, centerPosition, radius, true),
+                    out var entities))
             {
                 RunningAbilityPetPickup = false;
                 return;
             }
 
-            foreach (
-                var item in entities.OrderBy(item => item.Movement.Source.DistanceTo(Game.Player.AbilityPet.Position))
-            )
+            foreach (var item in entities.OrderBy(item =>
+                         item.Movement.Source.DistanceTo(Game.Player.AbilityPet.Position)))
             {
                 if (!RunningAbilityPetPickup)
                     return;
@@ -211,47 +198,49 @@ public class PickupManager
         if (JustPickMyItems && e.OwnerJID != playerJid)
             return false;
 
-        // Check if Item is within the training area + tolerance
-        const int tolerance = 15;
-        if (e.Movement.Source.DistanceTo(centerPosition) > radius + tolerance)
+        // Don't pickup items that still belong to another player
+        if (e.HasOwner && e.OwnerJID != playerJid)
             return false;
 
         if (applyPickOnlyChar && e.IsBehindObstacle)
             return false;
 
-        bool isItemAutoShareParty = Game.Party.IsInParty &&
-                            Game.Party.Settings.GetPartyType() is 2 or 3 or 6 or 7;
+        // Check if Item is within the training area + tolerance
+        const int tolerance = 15;
+        var isInside = e.Movement.Source.DistanceTo(centerPosition) <= radius + tolerance;
+        if (!isInside)
+            return false;
 
-        if (isItemAutoShareParty && PickupGold && e.Record.IsGold)
+        if (PickupGold && e.Record.IsGold &&
+            !(applyPickOnlyChar && pickOnlyChar))
+            return true;
+
+        if (PickupRareItems && (byte)e.Rarity >= 2)
+            return true;
+
+        if (PickupBlueItems && (byte)e.Rarity >= 1)
+            return true;
+
+        if (PickupAnyEquips && e.Record.IsEquip)
+            return true;
+
+        if (PickupQuestItems && e.Record.IsQuest)
+            return true;
+
+        if (PickupEverything)
+            return true;
+
+        if (applyPickOnlyChar)
         {
-            if (!(applyPickOnlyChar && pickOnlyChar))
+            if (PickupFilter.Any(p => p.CodeName == e.Record.CodeName && p.PickOnlyChar == pickOnlyChar))
                 return true;
         }
-
-        if (e.HasOwner && e.OwnerJID != playerJid)
+        else if (PickupFilter.Any(p => p.CodeName == e.Record.CodeName))
         {
-            if (!isItemAutoShareParty)
-                return false;
-
-            if (e.Record.IsQuest && Game.Party.Members.Any(m => m.MemberId == e.OwnerJID))
-                return false;
+            return true;
         }
 
-        if (PickupGold && e.Record.IsGold && !(applyPickOnlyChar && pickOnlyChar))
-            return true;
-
-        if (
-            (PickupRareItems && (byte)e.Rarity >= 2)
-            || (PickupBlueItems && (byte)e.Rarity >= 1)
-            || (PickupAnyEquips && e.Record.IsEquip)
-            || (PickupQuestItems && e.Record.IsQuest)
-            || PickupEverything
-        )
-            return true;
-
-        return applyPickOnlyChar
-            ? PickupFilter.Any(p => p.CodeName == e.Record.CodeName && p.PickOnlyChar == pickOnlyChar)
-            : PickupFilter.Any(p => p.CodeName == e.Record.CodeName);
+        return false;
     }
 
     public static void AddFilter(string codeName, bool pickOnlyChar = false)

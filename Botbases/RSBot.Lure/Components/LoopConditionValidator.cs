@@ -17,13 +17,12 @@ internal class LoopConditionValidator
             return $"[Lure] Pausing lure bot because there are less than {LureConfig.NumPartyMember} in the party.";
 
         if (!CheckNumPartyMemberDead())
-            return $"[Lure] Pausing lure bot because there more than {LureConfig.NumPartyMemberDead} people in the party are dead.";
-
-        if (!CheckNumPartyMembersOnSpot())
-            return $"[Lure] Pausing lure bot because there are less than {LureConfig.NumPartyMembersOnSpot} party members on the spot.";
+            return
+                $"[Lure] Pausing lure bot because there more than {LureConfig.NumPartyMember} people in the party are dead.";
 
         if (!CheckNumMonsterType())
-            return $"[Lure] Pausing lure bot because there are more monsters than {LureConfig.NumMonsterType} monsters around.";
+            return
+                $"[Lure] Pausing lure bot because there are more monsters than {LureConfig.NumMonsterType} monsters around.";
 
         return null;
     }
@@ -37,7 +36,7 @@ internal class LoopConditionValidator
         if (Game.Party == null || Game.Party.Members == null)
             return true;
 
-        return Game.Party.Members.Count > LureConfig.NumPartyMember;
+        return Game.Party.Members.Count <= LureConfig.NumPartyMember;
     }
 
     private static bool CheckNumPartyMemberDead()
@@ -49,25 +48,8 @@ internal class LoopConditionValidator
         if (Game.Party == null || Game.Party.Members == null)
             return true;
 
-        return Game.Party.Members.Count(p => p.Player != null && p.Player.State.LifeState == LifeState.Dead)
-            < LureConfig.NumPartyMemberDead;
-    }
-
-    private static bool CheckNumPartyMembersOnSpot()
-    {
-        if (!LureConfig.StopIfNumPartyMembersOnSpot)
-            return true;
-
-        //Skip check if player is not in a pt.
-        if (Game.Party == null || Game.Party.Members == null)
-            return true;
-
-        return Game.Party.Members.Count(p =>
-                (
-                    p.Player?.Movement.Source.DistanceTo(LureConfig.Area.Position)
-                    ?? p.Position.DistanceTo(LureConfig.Area.Position)
-                ) < 100
-            ) > LureConfig.NumPartyMembersOnSpot;
+        return Game.Party.Members.Count(p => p.Player != null && p.Player.State.LifeState == LifeState.Dead) <=
+               LureConfig.NumPartyMemberDead;
     }
 
     private static bool CheckNumMonsterType()
@@ -75,15 +57,11 @@ internal class LoopConditionValidator
         if (!LureConfig.StopIfNumMonsterType)
             return true;
 
-        if (
-            !SpawnManager.TryGetEntities<SpawnedMonster>(
-                m =>
-                    m.Rarity >= LureConfig.SelectedMonsterType && m.Position.DistanceTo(LureConfig.Area.Position) <= 15,
-                out var mobs
-            )
-        )
+        if (!SpawnManager.TryGetEntities<SpawnedMonster>(m => m.Rarity >= LureConfig.SelectedMonsterType &&
+                                                              m.Position.DistanceTo(LureConfig.Area.Position) <= 15,
+                out var mobs))
             return true;
 
-        return mobs.Count() < LureConfig.NumMonsterType;
+        return mobs.Count() <= LureConfig.NumMonsterType;
     }
 }

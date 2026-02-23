@@ -26,10 +26,8 @@ internal class AlchemyEventsSubscriber
         Globals.Botbase.MagicBundleConfig = null;
 
         Globals.View.SelectedItem = null;
-        Globals.View.AddLog(
-            oldItem.Record.GetRealName(),
-            Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_BREAKDOWN")
-        );
+        Globals.View.AddLog(oldItem.Record.GetRealName(),
+            Game.ReferenceManager.GetTranslation("UIIT_MSG_REINFORCERR_BREAKDOWN"));
         Log.Warn("[Alchemy] The item has been destroyed, stopping now...");
 
         Kernel.Bot?.Stop();
@@ -68,17 +66,13 @@ internal class AlchemyEventsSubscriber
                 break;
 
             case AlchemyType.MagicStone:
-                Globals.View.AddLog(
-                    item?.Record.GetRealName(),
-                    $"Fusing magic stone [{ingredient.Record.GetRealName()}]"
-                );
+                Globals.View.AddLog(item?.Record.GetRealName(),
+                    $"Fusing magic stone [{ingredient.Record.GetRealName()}]");
                 break;
 
             case AlchemyType.AttributeStone:
-                Globals.View.AddLog(
-                    item?.Record.GetRealName(),
-                    $"Fusing attribute stone [{ingredient.Record.GetRealName()}]"
-                );
+                Globals.View.AddLog(item?.Record.GetRealName(),
+                    $"Fusing attribute stone [{ingredient.Record.GetRealName()}]");
                 break;
 
             default:

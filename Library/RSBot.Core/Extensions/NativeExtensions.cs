@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace RSBot.Core.Extensions;
@@ -26,8 +25,7 @@ public static class NativeExtensions
     public static extern int SetWindowText(IntPtr hWnd, string text);
 
     [DllImport("kernel32.dll")]
-    public static extern bool CreateProcess /*A*/
-    (
+    public static extern bool CreateProcess /*A*/(
         string lpApplicationName,
         string lpCommandLine,
         IntPtr lpProcessAttributes,
@@ -62,16 +60,16 @@ public static class NativeExtensions
     );
 
     [DllImport("kernel32.dll")]
-    public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
+    public static extern IntPtr OpenProcess(
+        uint dwDesiredAccess,
+        bool bInheritHandle,
+        uint dwProcessId);
 
     [DllImport("kernel32")]
     public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
     [DllImport("kernel32.dll")]
     public static extern IntPtr GetModuleHandleA(string lpModuleName);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    public static extern IntPtr GetModuleHandleW(string lpModuleName);
 
     [DllImport("kernel32.dll")]
     public static extern bool CloseHandle(IntPtr handle);
@@ -84,8 +82,7 @@ public static class NativeExtensions
         IntPtr lpStartAddress,
         IntPtr lpParameter,
         uint dwCreationFlags,
-        IntPtr lpThreadId
-    );
+        IntPtr lpThreadId);
 
     [DllImport("kernel32.dll")]
     public static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
@@ -97,13 +94,8 @@ public static class NativeExtensions
     public static extern uint SuspendThread(IntPtr hThread);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern IntPtr VirtualAllocEx(
-        IntPtr hProcess,
-        IntPtr lpAddress,
-        uint dwSize,
-        uint flAllocationType,
-        uint flProtect
-    );
+    public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint flAllocationType,
+        uint flProtect);
 
     [DllImport("kernel32.dll")]
     public static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, uint dwSize, uint dwFreeType);
@@ -111,31 +103,16 @@ public static class NativeExtensions
     [DllImport("kernel32.dll")]
     public static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern bool GetExitCodeThread(IntPtr hThread, out uint lpExitCode);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    public static extern uint GetShortPathName(string lpszLongPath, char[] lpszShortPath, uint cchBuffer);
-
     [DllImport("kernel32.dll")]
     public static extern IntPtr LoadLibrary(string lpFileName);
 
     [DllImport("kernel32.dll")]
-    public static extern IntPtr CreateSemaphore(
-        [In] IntPtr lpSemaphoreAttributes,
-        [In] int lInitialCount,
-        [In] int lMaximumCount,
-        [In] IntPtr lpName
-    );
+    public static extern IntPtr CreateSemaphore([In] IntPtr lpSemaphoreAttributes, [In] int lInitialCount,
+        [In] int lMaximumCount, [In] IntPtr lpName);
 
     [DllImport("kernel32.dll")]
-    public static extern bool VirtualProtectEx(
-        IntPtr hProcess,
-        IntPtr lpAddress,
-        UIntPtr dwSize,
-        uint flNewProtect,
-        out uint lpflOldProtect
-    );
+    public static extern bool VirtualProtectEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect,
+        out uint lpflOldProtect);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hReservedNull, uint dwFlags);

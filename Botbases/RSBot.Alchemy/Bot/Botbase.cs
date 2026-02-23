@@ -135,6 +135,7 @@ internal class Botbase
     public void Tick()
     {
         switch (AlchemyEngine)
+
         {
             case AlchemyEngine.Enhance:
                 if (EnhanceBundleConfig == null || EnhanceBundle == null)
@@ -187,5 +188,5 @@ internal enum AlchemyEngine
 {
     Enhance,
     Magic,
-    Attribute,
+    Attribute
 }

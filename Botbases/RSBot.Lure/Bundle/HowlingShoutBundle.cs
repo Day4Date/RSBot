@@ -16,16 +16,12 @@ internal static class HowlingShoutBundle
         if (LureConfig.NoHowlingAtCenter && LureConfig.Area.Position.DistanceToPlayer() < 15)
             return;
 
-        var howlingShout = Game
-            .Player.Skills.KnownSkills.Where(s =>
-                s.Record.Basic_Group == "SKILL_EU_WARRIOR_FRENZYA_TOUNT_AREA_B"
-                || s.Record.Basic_Group == "SKILL_EU_WARRIOR_FRENZYA_TOUNT_AREA_A"
-                || s.Record.Basic_Group == "SKILL_EU_WARRIOR_FRENZYA_TOUNT_A"
-            )
-            .MaxBy(s => s.Record.ID);
-        if (howlingShout == null || howlingShout.CanNotBeCasted || howlingShout.HasCooldown)
+        var howlingShout =
+            Game.Player.Skills.KnownSkills.FirstOrDefault(s =>
+                s.Record.GroupID == 537); //SKILL_EU_WARRIOR_FRENZYA_TOUNT_AREA_A_04
+        if (howlingShout == null || howlingShout.CanNotBeCasted)
             return;
 
-        SkillManager.CastBuff(howlingShout);
+        SkillManager.CastBuff(howlingShout, awaitBuffResponse: false);
     }
 }

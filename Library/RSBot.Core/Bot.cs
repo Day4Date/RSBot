@@ -36,7 +36,7 @@ public class Bot
     public void SetBotbase(IBotbase botBase)
     {
         Botbase = botBase;
-        Botbase.Initialize();
+        //Botbase.Initialize();
 
         EventManager.FireEvent("OnSetBotbase", botBase);
     }
@@ -51,8 +51,7 @@ public class Bot
 
         TokenSource = new CancellationTokenSource();
 
-        Task.Factory.StartNew(
-            async e =>
+        Task.Factory.StartNew(async e =>
             {
                 Running = true;
 
@@ -68,9 +67,7 @@ public class Bot
                     await Task.Delay(100);
                 }
             },
-            TokenSource.Token,
-            TaskCreationOptions.LongRunning
-        );
+            TokenSource.Token, TaskCreationOptions.LongRunning);
     }
 
     /// <summary>
@@ -92,13 +89,13 @@ public class Bot
             TokenSource.Cancel();
 
         EventManager.FireEvent("OnStopBot");
-        Log.Notify($"Stopping bot {Botbase.Title}");
+        Log.Notify($"Stopping bot {Botbase.InternalName}");
 
         Game.SelectedEntity = null;
         Botbase.Stop();
         Running = false;
 
-        Log.Notify($"Stoped bot {Botbase.Title}");
+        Log.Notify($"Stoped bot {Botbase.InternalName}");
         Log.Status("Bot stopped");
     }
 }

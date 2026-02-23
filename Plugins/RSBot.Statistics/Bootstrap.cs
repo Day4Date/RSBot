@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+﻿using Avalonia.Controls;
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Plugins;
@@ -9,22 +9,10 @@ namespace RSBot.Statistics;
 public class Bootstrap : IPlugin
 {
     /// <inheritdoc />
-    public string Author => "RSBot Team";
+    public string InternalName => "RSBot.Statistics";
 
     /// <inheritdoc />
-    public string Description => "Provides various statistics about the bot's performance and activities.";
-
-    /// <inheritdoc />
-    public string Name => "RSBot.Statistics";
-
-    /// <inheritdoc />
-    public string Title => "Statistics";
-
-    /// <inheritdoc />
-    public string Version => "1.0.0";
-
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
+    public string DisplayName => "Statistics";
 
     /// <inheritdoc />
     public bool DisplayAsTab => true;
@@ -48,25 +36,5 @@ public class Bootstrap : IPlugin
     public void Translate()
     {
         LanguageManager.Translate(View, Kernel.Language);
-    }
-
-    /// <inheritdoc />
-    public void OnLoadCharacter()
-    {
-        // do nothing
-    }
-
-    /// <inheritdoc />
-    public void Enable()
-    {
-        if (View != null)
-            View.Enabled = true;
-    }
-
-    /// <inheritdoc />
-    public void Disable()
-    {
-        if (View != null)
-            View.Enabled = false;
     }
 }

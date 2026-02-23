@@ -146,7 +146,7 @@ public class Config
         var serializedConfig = new string[_config.Count];
         var index = 0;
 
-        foreach (var element in _config.OrderBy(c => c.Key))
+        foreach (var element in _config)
         {
             serializedConfig[index] = element.Key + "{" + element.Value + "}";
             index++;
@@ -175,11 +175,8 @@ public class Config
     /// <param name="key">The key.</param>
     /// <param name="delimiter">The delimiter.</param>
     /// <returns></returns>
-    public T[] GetArray<T>(
-        string key,
-        char delimiter = ',',
-        StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries
-    )
+    public T[] GetArray<T>(string key, char delimiter = ',',
+        StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries)
     {
         if (!_isLoaded)
             return new T[] { };

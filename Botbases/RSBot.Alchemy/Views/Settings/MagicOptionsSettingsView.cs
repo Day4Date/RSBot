@@ -13,12 +13,12 @@ using RSBot.Core.Client.ReferenceObjects;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using RSBot.Core.Objects.Item;
-using SDUI.Controls;
+
 
 namespace RSBot.Alchemy.Views.Settings;
 
 [ToolboxItem(false)]
-public partial class MagicOptionsSettingsView : DoubleBufferedControl
+public partial class MagicOptionsSettingsView : UserControl
 {
     #region Members
 
@@ -87,10 +87,8 @@ public partial class MagicOptionsSettingsView : DoubleBufferedControl
     {
         var tag = e.Item.Tag as MagicStoneListViewItemTag;
 
-        if (
-            (tag.MagicOptionInfo != null && tag?.MagicOptionInfo?.Value >= tag?.MagicOptionInfo?.Record?.GetMaxValue())
-            || tag.Item == null
-        )
+        if ((tag.MagicOptionInfo != null &&
+             tag?.MagicOptionInfo?.Value >= tag?.MagicOptionInfo?.Record?.GetMaxValue()) || tag.Item == null)
         {
             e.Item.Checked = false;
 
@@ -125,10 +123,8 @@ public partial class MagicOptionsSettingsView : DoubleBufferedControl
                 return;
             }
 
-            var assignments = Game.ReferenceManager.GetAssignments(
-                selectedItem.Record.TypeID3,
-                selectedItem.Record.TypeID4
-            );
+            var assignments =
+                Game.ReferenceManager.GetAssignments(selectedItem.Record.TypeID3, selectedItem.Record.TypeID4);
             foreach (var assignment in assignments)
             {
                 if (assignment == null)
@@ -147,21 +143,14 @@ public partial class MagicOptionsSettingsView : DoubleBufferedControl
                         if (magicOption.Record.Level != selectedItem.Record.Degree)
                         {
                             //Fix in case the server sends a lower magic option id than expected (dunno why this happens)
-                            var actualMagicOption = Game.ReferenceManager.GetMagicOption(
-                                assignment.Group,
-                                (byte)selectedItem.Record.Degree
-                            );
+                            var actualMagicOption = Game.ReferenceManager.GetMagicOption(assignment.Group,
+                                (byte)selectedItem.Record.Degree);
 
-                            matchingMagicStones = AlchemyItemHelper.GetStonesByGroup(
-                                magicOption.Record.Level,
-                                assignment.Group
-                            );
+                            matchingMagicStones =
+                                AlchemyItemHelper.GetStonesByGroup(magicOption.Record.Level, assignment.Group);
 
                             currentMagicOptionInfo = new MagicOptionInfo
-                            {
-                                Id = actualMagicOption.Id,
-                                Value = magicOption.Value,
-                            };
+                                { Id = actualMagicOption.Id, Value = magicOption.Value };
                         }
                         else
                         {
@@ -174,16 +163,12 @@ public partial class MagicOptionsSettingsView : DoubleBufferedControl
                 var canBeIncreased = !!matchingMagicStones.Any();
 
                 //Max option
-                if (
-                    currentMagicOptionInfo != null
-                    && currentMagicOptionInfo.Value >= currentMagicOptionInfo.Record.GetMaxValue()
-                )
+                if (currentMagicOptionInfo != null &&
+                    currentMagicOptionInfo.Value >= currentMagicOptionInfo.Record.GetMaxValue())
                     canBeIncreased = false;
 
-                var refMagicOption = Game.ReferenceManager.GetMagicOption(
-                    assignment.Group,
-                    (byte)selectedItem.Record.Degree
-                );
+                var refMagicOption =
+                    Game.ReferenceManager.GetMagicOption(assignment.Group, (byte)selectedItem.Record.Degree);
                 if (refMagicOption == null)
                     continue;
 
@@ -193,22 +178,18 @@ public partial class MagicOptionsSettingsView : DoubleBufferedControl
                     {
                         Item = matchingMagicStones.FirstOrDefault(),
                         MagicOption = assignment,
-                        MagicOptionInfo = currentMagicOptionInfo,
+                        MagicOptionInfo = currentMagicOptionInfo
                     },
-                    ForeColor = canBeIncreased ? Color.Green : Color.Red,
+                    ForeColor = canBeIncreased ? Color.Green : Color.Red
                 };
 
                 item.SubItems.Add(currentMagicOptionInfo == null ? "0" : currentMagicOptionInfo.Value.ToString());
                 item.SubItems.Add(refMagicOption.GetMaxValue().ToString());
                 item.SubItems.Add(!matchingMagicStones.Any() ? "x0" : $"x{matchingMagicStones.Sum(i => i.Amount)}");
 
-                if (
-                    Globals.Botbase.MagicBundleConfig != null
-                    && Globals.Botbase.MagicBundleConfig.MagicStones.Keys.FirstOrDefault(i =>
-                        i.Record.ID == matchingMagicStones.FirstOrDefault()?.ItemId
-                    ) != null
-                    && canBeIncreased
-                )
+                if (Globals.Botbase.MagicBundleConfig != null &&
+                    Globals.Botbase.MagicBundleConfig.MagicStones.Keys.FirstOrDefault(i =>
+                        i.Record.ID == matchingMagicStones.FirstOrDefault()?.ItemId) != null && canBeIncreased)
                     item.Checked = true;
                 else
                     item.Checked = false;
@@ -234,13 +215,12 @@ public partial class MagicOptionsSettingsView : DoubleBufferedControl
     /// </summary>
     private void ReloadConfig()
     {
-        if (!_reloadConfig)
-            return;
+        if (!_reloadConfig) return;
 
         Globals.Botbase.MagicBundleConfig = new MagicBundleConfig
         {
             Item = Globals.View.SelectedItem,
-            MagicStones = new Dictionary<InventoryItem, RefMagicOpt>(),
+            MagicStones = new Dictionary<InventoryItem, RefMagicOpt>()
         };
 
         try

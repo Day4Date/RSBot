@@ -119,25 +119,21 @@ public class SpawnedBionic : SpawnedEntity
             return true;
 
         Log.Debug(
-            $"Trying to select the entity: {UniqueId} State: {State.LifeState} Health: {Health} HasHealth: {HasHealth} Dst: {Math.Round(DistanceToPlayer, 1)}"
-        );
+            $"Trying to select the entity: {UniqueId} State: {State.LifeState} Health: {Health} HasHealth: {HasHealth} Dst: {Math.Round(DistanceToPlayer, 1)}");
 
         var packet = new Packet(0x7045);
         packet.WriteUInt(UniqueId);
 
-        var awaitCallback = new AwaitCallback(
-            response =>
-            {
-                var result = response.ReadByte() == 0x01;
-                if (result)
-                    return response.ReadUInt() == UniqueId
-                        ? AwaitCallbackResult.Success
-                        : AwaitCallbackResult.ConditionFailed;
+        var awaitCallback = new AwaitCallback(response =>
+        {
+            var result = response.ReadByte() == 0x01;
+            if (result)
+                return response.ReadUInt() == UniqueId
+                    ? AwaitCallbackResult.Success
+                    : AwaitCallbackResult.ConditionFailed;
 
-                return AwaitCallbackResult.Fail;
-            },
-            0xB045
-        );
+            return AwaitCallbackResult.Fail;
+        }, 0xB045);
 
         PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
@@ -156,24 +152,21 @@ public class SpawnedBionic : SpawnedEntity
         var packet = new Packet(0x704B);
         packet.WriteUInt(UniqueId);
 
-        var awaitResult = new AwaitCallback(
-            response =>
+        var awaitResult = new AwaitCallback(response =>
+        {
+            var successFlag = response.ReadByte();
+
+            if (successFlag == 2)
             {
-                var successFlag = response.ReadByte();
+                var errorCode = response.ReadUShort();
 
-                if (successFlag == 2)
-                {
-                    var errorCode = response.ReadUShort();
+                Log.Debug($"Error deselecting Entity {UniqueId} [Code={errorCode:X4}]");
 
-                    Log.Debug($"Error deselecting Entity {UniqueId} [Code={errorCode:X4}]");
+                return AwaitCallbackResult.Fail;
+            }
 
-                    return AwaitCallbackResult.Fail;
-                }
-
-                return AwaitCallbackResult.Success;
-            },
-            0xB04B
-        );
+            return AwaitCallbackResult.Success;
+        }, 0xB04B);
 
         PacketManager.SendPacket(packet, PacketDestination.Server, awaitResult);
         awaitResult.AwaitResponse();

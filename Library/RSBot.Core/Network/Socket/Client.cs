@@ -1,7 +1,7 @@
-﻿using System;
+﻿using RSBot.Core.Network.Protocol;
+using System;
 using System.Net;
 using System.Net.Sockets;
-using RSBot.Core.Network.Protocol;
 
 namespace RSBot.Core.Network;
 
@@ -31,7 +31,9 @@ public class Client() : NetBase(isClient: true)
             _listener.Listen(1);
             _listener.BeginAccept(OnClientConnect, null);
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>
@@ -48,7 +50,9 @@ public class Client() : NetBase(isClient: true)
 
             _listener.BeginAccept(OnClientConnect, null);
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>
@@ -83,7 +87,9 @@ public class Client() : NetBase(isClient: true)
             _protocol = null;
             _dispatcherThread = null;
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>
@@ -136,10 +142,12 @@ public class Client() : NetBase(isClient: true)
             }
 
             _protocol.Recv(_buffer, 0, receivedSize);
+
         }
         catch (SocketException se)
         {
-            if (se.SocketErrorCode == SocketError.ConnectionReset) //Client OnDisconnected > Mostly occurs during GW->AS switch
+            if (se.SocketErrorCode ==
+                SocketError.ConnectionReset) //Client OnDisconnected > Mostly occurs during GW->AS switch
             {
                 OnDisconnected();
 
@@ -159,7 +167,9 @@ public class Client() : NetBase(isClient: true)
                 if (receivedSize != 0 && _socket != null && _socket.Connected)
                     _socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, OnBeginReceiveCallback, null);
             }
-            catch { }
+            catch
+            {
+            }
         }
     }
 }

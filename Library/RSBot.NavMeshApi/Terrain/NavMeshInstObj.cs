@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
-using System.Numerics;
-using RSBot.NavMeshApi.Edges;
+﻿using RSBot.NavMeshApi.Edges;
 using RSBot.NavMeshApi.Object;
+
+using System.Diagnostics;
+using System.Numerics;
 
 namespace RSBot.NavMeshApi.Terrain;
 

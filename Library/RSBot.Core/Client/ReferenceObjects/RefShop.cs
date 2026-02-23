@@ -28,11 +28,9 @@ public class RefShop : IReference<string>
     {
         var mapping = Game.ReferenceManager.ShopTabMapping.Where(m => m.Shop == CodeName);
 
-        return (
-            from map in mapping
+        return (from map in mapping
             from tab in Game.ReferenceManager.ShopTabs.Where(s => s.Value.RefTabGroupCodeName == map.Tab)
-            select tab.Value
-        ).ToList();
+            select tab.Value).ToList();
     }
 
     #region Fields

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using RSBot.Core.Event;
+﻿using RSBot.Core.Event;
 using RSBot.Core.Extensions;
 using RSBot.Core.Network.Protocol;
+using System;
+using System.Net;
+using System.Net.Sockets;
 
 namespace RSBot.Core.Network;
 
@@ -94,7 +94,9 @@ public class Server : NetBase
             EventManager.FireEvent("OnServerConnected");
             Log.Debug("Server connection established!");
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>
@@ -121,7 +123,8 @@ public class Server : NetBase
         }
         catch (SocketException se)
         {
-            if (se.SocketErrorCode == SocketError.ConnectionReset) //Client OnDisconnected > Mostly occurs during GW->AS switch
+            if (se.SocketErrorCode ==
+                SocketError.ConnectionReset) //Client OnDisconnected > Mostly occurs during GW->AS switch
                 OnDisconnected();
         }
         catch (HandshakeSecurityException)
@@ -172,7 +175,9 @@ public class Server : NetBase
                 _socket.Close();
             }
         }
-        catch { }
+        catch
+        {
+        }
         finally
         {
             _socket = null;

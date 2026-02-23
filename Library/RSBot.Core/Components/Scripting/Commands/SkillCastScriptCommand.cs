@@ -51,7 +51,10 @@ internal class SkillCastScriptCommand : IScriptCommand
 
     public bool IsBusy { get; private set; }
 
-    public Dictionary<string, string> Arguments => new() { { "SkillId", "The Id of the skill to be cast" } };
+    public Dictionary<string, string> Arguments => new()
+    {
+        { "SkillId", "The Id of the skill to be cast" }
+    };
 
     #endregion Properties
 }

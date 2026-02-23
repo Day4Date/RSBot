@@ -15,5 +15,7 @@ public static class BinaryWriterExtensions
         writer.Write(buffer);
     }
 
-    public static byte[] GetSnapshot(this BinaryWriter binary) => ((MemoryStream)binary.BaseStream).ToArray();
+    public static byte[] GetSnapshot(this BinaryWriter binary)
+            => ((MemoryStream)binary.BaseStream).ToArray();
+
 }

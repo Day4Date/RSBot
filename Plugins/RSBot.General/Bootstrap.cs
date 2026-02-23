@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+﻿using Avalonia.Controls;
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Plugins;
@@ -9,22 +9,10 @@ namespace RSBot.General;
 public class Bootstrap : IPlugin
 {
     /// <inheritdoc />
-    public string Author => "RSBot Team";
+    public string InternalName => "RSBot.General";
 
     /// <inheritdoc />
-    public string Description => "General plugin for RSBot, providing various utilities and features.";
-
-    /// <inheritdoc />
-    public string Name => "RSBot.General";
-
-    /// <inheritdoc />
-    public string Title => "General";
-
-    /// <inheritdoc />
-    public string Version => "1.0.0";
-
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
+    public string DisplayName => "General";
 
     /// <inheritdoc />
     public bool DisplayAsTab => true;
@@ -50,25 +38,5 @@ public class Bootstrap : IPlugin
         LanguageManager.Translate(View, Kernel.Language);
         LanguageManager.Translate(Views.View.PendingWindow, Kernel.Language);
         LanguageManager.Translate(Views.View.AccountsWindow, Kernel.Language);
-    }
-
-    /// <inheritdoc />
-    public void OnLoadCharacter()
-    {
-        // do nothing
-    }
-
-    /// <inheritdoc />
-    public void Enable()
-    {
-        if (View != null)
-            View.Enabled = true;
-    }
-
-    /// <inheritdoc />
-    public void Disable()
-    {
-        if (View != null)
-            View.Enabled = false;
     }
 }

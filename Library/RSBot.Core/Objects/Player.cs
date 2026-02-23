@@ -61,8 +61,9 @@ public class Player : SpawnedBionic
     ///     <inheritdoc />
     /// </summary>
     /// <param name="objId"></param>
-    public Player(uint objId)
-        : base(objId) { }
+    public Player(uint objId) : base(objId)
+    {
+    }
 
     /// <summary>
     ///     Gets or sets the scale.
@@ -564,11 +565,6 @@ public class Player : SpawnedBionic
     public TradeInfo TradeInfo { get; internal set; } = null;
 
     /// <summary>
-    ///     Notification sounds
-    /// </summary>
-    public NotificationSounds NotificationSounds { get; private set; } = new();
-
-    /// <summary>
     ///     Gets a value indicating whether this player is able to attack.
     /// </summary>
     /// <value>
@@ -647,7 +643,7 @@ public class Player : SpawnedBionic
                 TypeID1 = 3,
                 TypeID2 = 3,
                 TypeID3 = 4,
-                TypeID4 = (byte)GetCurrentAmmunitionType(),
+                TypeID4 = (byte)GetCurrentAmmunitionType()
             };
 
             return Inventory.GetSumAmount(typeIdFilter);
@@ -666,7 +662,7 @@ public class Player : SpawnedBionic
         {
             ObjectCountry.Europe => AmmunitionType.Bolt,
             ObjectCountry.Chinese => AmmunitionType.Arrow,
-            _ => AmmunitionType.None,
+            _ => AmmunitionType.None
         };
     }
 
@@ -710,16 +706,11 @@ public class Player : SpawnedBionic
             packet.WriteInt(destination.YOffset);
         }
 
-        var awaitCallback = new AwaitCallback(
-            response =>
-            {
-                var uniqueId = response.ReadUInt();
-                return uniqueId == Game.Player.UniqueId
-                    ? AwaitCallbackResult.Success
-                    : AwaitCallbackResult.ConditionFailed;
-            },
-            0xB021
-        );
+        var awaitCallback = new AwaitCallback(response =>
+        {
+            var uniqueId = response.ReadUInt();
+            return uniqueId == Game.Player.UniqueId ? AwaitCallbackResult.Success : AwaitCallbackResult.ConditionFailed;
+        }, 0xB021);
 
         PacketManager.SendPacket(packet, PacketDestination.Server, awaitCallback);
         awaitCallback.AwaitResponse();
@@ -790,8 +781,7 @@ public class Player : SpawnedBionic
             else
             {
                 Log.Debug(
-                    $"[ERROR] Potion [{potionItem.Record.GetRealName()}] used Elapsed:{elapsed} Duration:{duration} Condition:{elapsed < duration}"
-                );
+                    $"[ERROR] Potion [{potionItem.Record.GetRealName()}] used Elapsed:{elapsed} Duration:{duration} Condition:{elapsed < duration}");
             }
 
             return result;
@@ -894,19 +884,14 @@ public class Player : SpawnedBionic
     /// <returns></returns>
     public bool SummonVehicle()
     {
-        if (
-            HasActiveVehicle
-            || Game.Player.State.BattleState == BattleState.InBattle
-            || Game.Player.JobTransport != null
-        )
+        if (HasActiveVehicle || Game.Player.State.BattleState == BattleState.InBattle ||
+            Game.Player.JobTransport != null)
             return false;
 
         var typeIdFilter = new TypeIdFilter(3, 3, 3, 2);
         var vehicleItem = Inventory.GetItem(item =>
-            typeIdFilter.EqualsRefItem(item.Record)
-            && item.Record.ReqLevel1 <= Game.Player.Level
-            && !item.Record.CodeName.Contains("COS_T")
-        );
+            typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Game.Player.Level &&
+            !item.Record.CodeName.Contains("COS_T"));
         if (vehicleItem == null)
             return false;
 
@@ -924,8 +909,7 @@ public class Player : SpawnedBionic
 
         var typeIdFilter = new TypeIdFilter(3, 3, 3, 1);
         var slotItem = Inventory.GetItem(item =>
-            typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Game.Player.Level
-        );
+            typeIdFilter.EqualsRefItem(item.Record) && item.Record.ReqLevel1 <= Game.Player.Level);
         if (slotItem == null)
             return false;
 
@@ -1000,12 +984,9 @@ public class Player : SpawnedBionic
             return false;
 
         var petLevel = petItem.Cos.Level;
-        var rescueItem = Inventory.GetItem(p =>
-            p.Record.IsCosRevivalPotion
-            && p.Record.CodeName.StartsWith("ITEM_PET2_GOODS_REVIVAL_")
-            && petLevel >= p.Record.ReqLevel1
-            && petLevel <= p.Record.ReqLevel2
-        );
+        var rescueItem = Inventory.GetItem(p => p.Record.IsCosRevivalPotion &&
+                                                p.Record.CodeName.StartsWith("ITEM_PET2_GOODS_REVIVAL_") &&
+                                                petLevel >= p.Record.ReqLevel1 && petLevel <= p.Record.ReqLevel2);
 
         if (rescueItem == null)
             return false;
@@ -1054,10 +1035,6 @@ public class Player : SpawnedBionic
         if (petItem.State == InventoryItemState.Summoned || petItem.State == InventoryItemState.Dead)
             return false;
 
-        var usingItem = Game.Player.Inventory.GetItem(p => p.Record.IsFellowHpPotion);
-        if (usingItem == null)
-            return false;
-
         return petItem.Use();
     }
 
@@ -1091,17 +1068,15 @@ public class Player : SpawnedBionic
             if (item.HasAbility(out var abilityItem))
                 abilitySkills.AddRange(abilityItem.GetLinks().Select(skillId => new SkillInfo(skillId, true)));
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (Game.ClientType >= GameClientType.Chinese)
             {
                 if (!item.HasExtraAbility(out var extraAbilityItems))
                     continue;
 
-                abilitySkills.AddRange(
-                    extraAbilityItems
-                        .SelectMany(p => p.Skills)
-                        .Where(p => p != 0)
-                        .Select(skillId => new SkillInfo(skillId, true))
-                );
+                abilitySkills.AddRange(extraAbilityItems
+                    .SelectMany(p => p.Skills)
+                    .Where(p => p != 0)
+                    .Select(skillId => new SkillInfo(skillId, true)));
             }
         }
 

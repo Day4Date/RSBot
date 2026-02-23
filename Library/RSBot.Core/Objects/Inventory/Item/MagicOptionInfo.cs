@@ -36,6 +36,10 @@ public class MagicOptionInfo
     /// <returns></returns>
     internal static MagicOptionInfo FromPacket(Packet packet)
     {
-        return new MagicOptionInfo { Id = packet.ReadUInt(), Value = packet.ReadUInt() };
+        return new MagicOptionInfo
+        {
+            Id = packet.ReadUInt(),
+            Value = packet.ReadUInt()
+        };
     }
 }

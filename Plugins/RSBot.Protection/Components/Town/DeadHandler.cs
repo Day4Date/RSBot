@@ -50,10 +50,8 @@ public class DeadHandler : AbstractTownHandler
             return;
 
         var itemsToUse = PlayerConfig.GetArray<string>("RSBot.Inventory.AutoUseAccordingToPurpose");
-        var inventoryItem = Game.Player.Inventory.GetItem(
-            new TypeIdFilter(3, 3, 13, 6),
-            p => itemsToUse.Contains(p.Record.CodeName)
-        );
+        var inventoryItem =
+            Game.Player.Inventory.GetItem(new TypeIdFilter(3, 3, 13, 6), p => itemsToUse.Contains(p.Record.CodeName));
         if (inventoryItem != null)
         {
             inventoryItem.Use();
@@ -71,6 +69,6 @@ public class DeadHandler : AbstractTownHandler
 
         var packet = new Packet(0x3053);
         packet.WriteByte(1);
-        PacketManager.SendPacket(packet, PacketDestination.Server); //Only works if not teleporting at that moment
+        PacketManager.SendPacket(packet, PacketDestination.Server);
     }
 }

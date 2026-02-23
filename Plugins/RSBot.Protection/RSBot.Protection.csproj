@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>disable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
     <OutputPath>.\..\..\Build\Data\Plugins</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -11,11 +11,23 @@
     <PackageProjectUrl>https://github.com/SDClowen/RSBot</PackageProjectUrl>
     <RepositoryUrl>https://github.com/SDClowen/RSBot</RepositoryUrl>
     <OutputType>Library</OutputType>
-    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj" />
-    <ProjectReference Include="..\..\SDUI\SDUI\SDUI.csproj" />
+    <PackageReference Include="Avalonia" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.2" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\Main.axaml.cs">
+      <DependentUpon>Main.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

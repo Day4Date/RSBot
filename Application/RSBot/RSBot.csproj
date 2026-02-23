@@ -1,43 +1,60 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>disable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <OutputPath>.\..\..\Build</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <Description>A open source bot for Silkroad Online</Description>
-    <Copyright>Copyright © 2025, RSBot Team</Copyright>
-    <PackageProjectUrl>https://github.com/SDClowen/RSBot</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/SDClowen/RSBot</RepositoryUrl>
-    <OutputType>WinExe</OutputType>
-    <ApplicationIcon>app.ico</ApplicationIcon>
-    <InformationalVersion>2.9.9</InformationalVersion>
-    <AssemblyVersion>2.9.9</AssemblyVersion>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseWPF>False</UseWPF>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<OutputPath>.\..\..\Build</OutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<Description>A open source bot for Silkroad Online</Description>
+		<Copyright>Copyright © 2018 - 2025, RSBot Team</Copyright>
+		<PackageProjectUrl>https://github.com/SDClowen/RSBot</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/SDClowen/RSBot</RepositoryUrl>
+		<PlatformTarget>x86</PlatformTarget>
+		<RuntimeIdentifier>win-x86</RuntimeIdentifier>
+		<OutputType>WinExe</OutputType>
+		<AssemblyVersion>3.0.0</AssemblyVersion>
+		<PublishAot>false</PublishAot>
+	</PropertyGroup>
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Assets\app.ico" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
+		<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.2" />
+		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Views\SplashScreen.axaml.cs">
+			<DependentUpon>SplashScreen.axaml</DependentUpon>
+		</Compile>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="app.ico" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj">
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\SDUI\SDUI\SDUI.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<PublishSingleFile>true</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<PublishTrimmed>true</PublishTrimmed>
+		<PublishReadyToRun>true</PublishReadyToRun>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
-  </ItemGroup>
-  <Target Name="CopyDependencies" AfterTargets="Build">
-    <ItemGroup>
-      <DependencyFiles Include="..\..\Dependencies\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="..\..\Build\Data\%(RecursiveDir)" />
-  </Target>
+
+	<PropertyGroup Label="Avalonia">
+		<AvaloniaXamlIlDebuggerLaunch>True</AvaloniaXamlIlDebuggerLaunch>
+		<ApplicationIcon>Assets\app.ico</ApplicationIcon>
+	</PropertyGroup>
+
+
 </Project>

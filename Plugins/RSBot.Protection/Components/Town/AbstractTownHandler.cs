@@ -11,20 +11,13 @@ public abstract class AbstractTownHandler
         22617,
         22618,
         22874,
-        23087,
         23088,
-        23345,
-        23346,
-        23602,
         23603,
         23687,
         25000,
         26265,
         26959,
-        27243,
-        27244,
-        27499,
-        27500,
+        27244
     };
 
     public static bool PlayerInTownScriptRegion()

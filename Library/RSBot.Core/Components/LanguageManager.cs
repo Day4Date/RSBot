@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Avalonia.Controls;
+using Avalonia.VisualTree;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
+using System.Text;
 
 namespace RSBot.Core.Components;
 
@@ -23,10 +25,10 @@ public class LanguageManager
     /// </summary>
     /// <param name="menuItem">The toolstrip menu item</param>
     /// <returns></returns>
-    private static List<ToolStripMenuItem> GetAllMenuItems(ToolStripMenuItem menuItem)
+    private static List<MenuItem> GetAllMenuItems(MenuItem menuItem)
     {
-        var collection = new List<ToolStripMenuItem> { menuItem };
-        foreach (ToolStripMenuItem item in menuItem.DropDownItems)
+        var collection = new List<MenuItem> { menuItem };
+        foreach (MenuItem item in menuItem.Items)
             collection.AddRange(GetAllMenuItems(item));
 
         return collection;
@@ -57,8 +59,8 @@ public class LanguageManager
 
             value = value
                 .Replace("\\r\\n", "\r\n") // CRLF
-                .Replace("\\n", "\n") // LF
-                .Replace("\\r", "\r"); // CR
+                .Replace("\\n", "\n")       // LF
+                .Replace("\\r", "\r");      // CR
 
             if (!languages.ContainsKey(key))
             {
@@ -79,54 +81,57 @@ public class LanguageManager
     {
         var contents = new List<string>();
 
-        foreach (Control control in main.Controls)
+        foreach (Control control in main.GetVisualDescendants().OfType<Control>())
         {
-            var headerEx = $"{header}.{control.Parent.GetType().Name}";
-            if (control is ToolStrip toolStrip)
+            var headerEx = $"{header}.{control.Parent?.GetType().Name}";
+
+            if (control is Menu menu)
             {
-                var menuItems = new List<ToolStripItem>();
-                foreach (var menuItem in toolStrip.Items.OfType<ToolStripMenuItem>())
+                var menuItems = new List<MenuItem>();
+                foreach (var menuItem in menu.Items.OfType<MenuItem>())
                     menuItems.AddRange(GetAllMenuItems(menuItem));
 
                 foreach (var item in menuItems)
                 {
-                    if (string.IsNullOrEmpty(item.Name) || string.IsNullOrEmpty(item.Text))
+                    if (string.IsNullOrEmpty(item.Name) ||
+                        string.IsNullOrEmpty(item.Header?.ToString()))
                         continue;
 
                     var menuItemCheckName = $"{headerEx}.{item.Name}";
                     if (!languages.ContainsKey(menuItemCheckName))
                     {
-                        contents.Add($"{menuItemCheckName}=\"{item.Text}\"");
-
-                        languages[item.Name] = item.Text;
+                        contents.Add($"{menuItemCheckName}=\"{item.Header}\"");
+                        languages[item.Name] = item.Header.ToString();
                     }
                 }
             }
 
-            if (control is ToolStrip)
+            if (control is Menu)
                 continue;
 
-            CheckMissings(file, headerEx, control, languages);
-
-            if (
-                !(control is Label)
-                && !(control is GroupBox)
-                && !(control is ButtonBase)
-                && !(control is TabControl)
-                && !(control is TabPage)
-                && !(control is ToolStrip)
-            )
+            if (!(control is TextBlock) &&
+                !(control is Button) &&
+                !(control is TabControl) &&
+                !(control is TabItem))
                 continue;
 
-            if (string.IsNullOrEmpty(control.Name) || string.IsNullOrEmpty(control.Text))
+            if (string.IsNullOrEmpty(control.Name))
+                continue;
+
+            string controlText = null;
+            if (control is TextBlock textBlock)
+                controlText = textBlock.Text;
+            else if (control is ContentControl contentControl)
+                controlText = contentControl.Content?.ToString();
+
+            if (string.IsNullOrEmpty(controlText))
                 continue;
 
             var checkName = $"{headerEx}.{control.Name}";
             if (!languages.ContainsKey(checkName))
             {
-                contents.Add($"{checkName}=\"{control.Text}\"");
-
-                languages[control.Name] = control.Text;
+                contents.Add($"{checkName}=\"{controlText}\"");
+                languages[control.Name] = controlText;
             }
         }
 
@@ -186,27 +191,17 @@ public class LanguageManager
     public static void Translate(Control view, string language = "en_US")
     {
         var type = view.GetType();
-
-        var controlName = type.FullName;
         var assembly = type.Assembly.GetName().Name;
-
         var path = Path.Combine(_path, assembly, language + ".rsl");
         var dir = Path.GetDirectoryName(path);
 
         if (!Directory.Exists(dir))
             Directory.CreateDirectory(dir);
 
-        var stopwatch = Stopwatch.StartNew();
-
         if (!File.Exists(path))
             return;
-        //File.CreateText(path).Dispose();
-
-        //var instance = (Control)Activator.CreateInstance(type);
 
         var values = ParseLanguageFile(path);
-        //CheckMissings(path, assembly, view, values);
-
         _values[assembly] = values;
 
         TranslateControls(values, view, assembly);
@@ -214,43 +209,47 @@ public class LanguageManager
 
     private static void TranslateControls(LangDict values, Control view, string header)
     {
-        foreach (Control control in view.Controls)
+        foreach (Control control in view.GetVisualDescendants().OfType<Control>())
         {
-            var headerEx = $"{header}.{control.Parent.GetType().Name}";
-
+            var headerEx = $"{header}.{control.Parent?.GetType().Name}";
             string translatedText;
 
-            if (control is ToolStrip strip)
+            if (control is Menu menu)
             {
-                foreach (var toolStripItem in strip.Items.OfType<ToolStripMenuItem>())
+                foreach (var menuItem in menu.Items.OfType<MenuItem>())
                 {
-                    var subItems = GetAllMenuItems(toolStripItem);
+                    var subItems = GetAllMenuItems(menuItem);
                     foreach (var subMenuItem in subItems)
                         if (values.TryGetValue($"{headerEx}.{subMenuItem.Name}", out translatedText))
                             if (!string.IsNullOrWhiteSpace(translatedText))
-                                subMenuItem.Text = translatedText;
+                                subMenuItem.Header = translatedText;
                 }
-
                 continue;
             }
 
             if (values.TryGetValue($"{headerEx}.{control.Name}", out translatedText))
+            {
                 if (!string.IsNullOrWhiteSpace(translatedText))
-                    control.Text = translatedText;
-
-            TranslateControls(values, control, headerEx);
+                {
+                    if (control is TextBlock textBlock)
+                        textBlock.Text = translatedText;
+                    else if (control is ContentControl contentControl)
+                        contentControl.Content = translatedText;
+                }
+            }
         }
     }
 
-    public static Dictionary<string, string> GetLanguages()
+    public static LangDict GetLanguages()
     {
         var filePath = Path.Combine(_path, "langs.rsl");
         if (!File.Exists(filePath))
         {
-            MessageBox.Show($"Language list file is missing! \n {filePath}");
+            //MessageBox.Show($"Language list file is missing! \n {filePath}");
             Environment.Exit(0);
         }
 
-        return File.ReadAllLines(filePath).ToDictionary(p => p.Split(':')[0], p => p.Split(':')[1]);
+        return File.ReadAllLines(filePath)
+            .ToDictionary(p => p.Split(':')[0], p => p.Split(':')[1]);
     }
 }

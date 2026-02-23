@@ -1,4 +1,5 @@
-﻿using RSBot.Core;
+﻿using System;
+using RSBot.Core;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 
@@ -19,29 +20,30 @@ public class AutoSummonAttackPet
     /// </summary>
     private static void SubscribeEvents()
     {
-        EventManager.SubscribeEvent("OnKillSelectedEnemy", OnKillSelectedEnemy);
+        EventManager.SubscribeEvent("OnUpdateEntityBattleState", new Action<uint>(OnEntityBattleStateChanged));
         EventManager.SubscribeEvent("OnStartBot", OnStartBot);
     }
 
     /// <summary>
     /// </summary>
     /// <param name="uniqueId">The unique identifier.</param>
-    private static void OnKillSelectedEnemy()
+    private static void OnEntityBattleStateChanged(uint uniqueId)
     {
         if (!Kernel.Bot.Running)
             return;
 
-        if (Game.Player.State.LifeState == LifeState.Dead)
+        if (uniqueId != Game.Player.UniqueId)
             return;
 
-        if (Game.Player.Growth != null || Game.Player.Fellow != null)
+        if (Game.Player.Growth != null ||
+            Game.Player.Fellow != null)
             return;
 
         if (!PlayerConfig.Get<bool>("RSBot.Protection.checkAutoSummonAttackPet"))
             return;
 
-        //if (Game.Player.State.BattleState != BattleState.InPeace)
-        //    return;
+        if (Game.Player.State.BattleState != BattleState.InPeace)
+            return;
 
         if (Game.Player.SummonFellow())
             return;
@@ -53,7 +55,8 @@ public class AutoSummonAttackPet
     /// </summary>
     private static void OnStartBot()
     {
-        if (Game.Player.Growth != null || Game.Player.Fellow != null)
+        if (Game.Player.Growth != null ||
+            Game.Player.Fellow != null)
             return;
 
         if (!PlayerConfig.Get<bool>("RSBot.Protection.checkAutoSummonAttackPet"))

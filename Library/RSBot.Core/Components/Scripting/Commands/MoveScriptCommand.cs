@@ -35,15 +35,14 @@ internal class MoveScriptCommand : IScriptCommand
     /// <value>
     ///     The arguments.
     /// </value>
-    public Dictionary<string, string> Arguments =>
-        new()
-        {
-            { "XSector", "The X sector of the region" },
-            { "YSector", "The Y sector of the region" },
-            { "XOffset", "The X offset inside the region" },
-            { "YOffset", "The Y offset inside the region" },
-            { "ZOffset", "The Z offset inside the region" },
-        };
+    public Dictionary<string, string> Arguments => new()
+    {
+        { "XSector", "The X sector of the region" },
+        { "YSector", "The Y sector of the region" },
+        { "XOffset", "The X offset inside the region" },
+        { "YOffset", "The Y offset inside the region" },
+        { "ZOffset", "The Z offset inside the region" }
+    };
 
     #endregion Properties
 
@@ -86,8 +85,7 @@ internal class MoveScriptCommand : IScriptCommand
                 if (stepRetryCounter++ >= retryAttempts)
                 {
                     Log.Warn(
-                        "[Script] The move command failed due to an unknown reason! Please check the walk script."
-                    );
+                        "[Script] The move command failed due to an unknown reason! Please check the walk script.");
 
                     return false;
                 }
@@ -112,13 +110,11 @@ internal class MoveScriptCommand : IScriptCommand
     /// <param name="arguments">The arguments.</param>
     private bool ExecuteMove(IReadOnlyList<string> arguments)
     {
-        if (
-            !float.TryParse(arguments[0], out var xOffset)
+        if (!float.TryParse(arguments[0], out var xOffset)
             || !float.TryParse(arguments[1], out var yOffset)
             || !float.TryParse(arguments[2], out var zOffset)
             || !byte.TryParse(arguments[3], out var xSector)
-            || !byte.TryParse(arguments[4], out var ySector)
-        )
+            || !byte.TryParse(arguments[4], out var ySector))
         {
             IsBusy = false;
 
@@ -128,32 +124,9 @@ internal class MoveScriptCommand : IScriptCommand
         Position previousPosition = Game.Player.Position;
         Position pos = new(xSector, ySector, xOffset, yOffset, zOffset);
 
-        if (PlayerConfig.Get("RSBot.Training.checkUseSpeedDrug", true))
-        {
-            if (
-                !Game.Player.HasActiveVehicle
-                && !Game.Player.InAction
-                && Game.Player.State.ActiveBuffs.FindIndex(p => p.Record.Params.Contains(1752396901)) < 0
-            )
-            {
-                var item = Game.Player.Inventory.GetItem(
-                    new TypeIdFilter(3, 3, 13, 1),
-                    p => p.Record.Desc1.Contains("_SPEED_")
-                );
-                item?.Use();
-            }
-        }
-
         if (PlayerConfig.Get("RSBot.Training.checkUseMount", true))
         {
-            if (
-                !Game.Player.HasActiveVehicle
-                && !Game.Player.InAction
-                && !(
-                    ScriptManager.Running
-                    && ScriptManager.File == PlayerConfig.Get("RSBot.Lure.SelectedScriptPath", string.Empty)
-                )
-            )
+            if (!Game.Player.HasActiveVehicle && !Game.Player.InAction)
             {
                 Game.Player.SummonFellow();
 
@@ -192,6 +165,7 @@ internal class MoveScriptCommand : IScriptCommand
 
         Log.Debug($"[Script] Move to position {pos.Region}({pos.Region.X},{pos.Region.Y}) X={pos.X}, Y={pos.Y}");
 
+        
         bool posResult = Game.Player.MoveTo(pos);
 
         if (MustDismount)

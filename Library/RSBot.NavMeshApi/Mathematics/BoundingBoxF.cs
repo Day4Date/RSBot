@@ -4,6 +4,7 @@ namespace RSBot.NavMeshApi.Mathematics;
 
 public readonly struct BoundingBoxF
 {
+
     #region Properties
 
     public float Width => this.Max.X - this.Min.X;
@@ -26,11 +27,8 @@ public readonly struct BoundingBoxF
 
     public readonly bool Contains(in Vector3 p)
     {
-        return p.X >= this.Min.X
-            && p.X <= this.Max.X
-            && p.Y >= this.Min.Y
-            && p.Y <= this.Max.Y
-            && p.Z >= this.Min.Z
-            && p.Z <= this.Max.Z;
+        return p.X >= this.Min.X && p.X <= this.Max.X
+            && p.Y >= this.Min.Y && p.Y <= this.Max.Y
+            && p.Z >= this.Min.Z && p.Z <= this.Max.Z;
     }
 }

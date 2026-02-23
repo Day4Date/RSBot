@@ -62,8 +62,7 @@ internal class CosUpdateResponse : IPacketHandler
                         Game.Player.Growth.Level = iLevel;
                         EventManager.FireEvent("OnGrowthLevelUp");
                         Log.Notify(
-                            $"Congratulations, your pet [{Game.Player.Growth.Name}] level has increased to [{Game.Player.Growth.Level}]"
-                        );
+                            $"Congratulations, your pet [{Game.Player.Growth.Name}] level has increased to [{Game.Player.Growth.Level}]");
                     }
 
                     EventManager.FireEvent("OnGrowthExperienceUpdate");
@@ -129,8 +128,7 @@ internal class CosUpdateResponse : IPacketHandler
                         Game.Player.Fellow.MaxHealth = Game.Player.Fellow.Health;
                         EventManager.FireEvent("OnFellowLevelUp");
                         Log.Notify(
-                            $"Congratulations, your fellow pet [{Game.Player.Fellow.Name}] level has increased to [{Game.Player.Fellow.Level}]"
-                        );
+                            $"Congratulations, your fellow pet [{Game.Player.Fellow.Name}] level has increased to [{Game.Player.Fellow.Level}]");
                     }
 
                     EventManager.FireEvent("OnFellowExperienceUpdate");
@@ -153,13 +151,6 @@ internal class CosUpdateResponse : IPacketHandler
                     if (record != null)
                         Game.Player.Fellow.Health = Game.Player.Fellow.MaxHealth = record.MaxHealth;
 
-                    break;
-
-                case 8:
-                    packet.ReadULong(); //gained pet exp
-                    packet.ReadULong(); //gained skill exp
-                    packet.ReadUInt(); //total stored SP
-                    packet.ReadUInt(); //mob id
                     break;
 
                 default:

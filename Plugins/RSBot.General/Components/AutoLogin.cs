@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using RSBot.Core;
 using RSBot.Core.Components;
@@ -10,6 +8,8 @@ using RSBot.Core.Network;
 using RSBot.Core.Network.Protocol;
 using RSBot.General.Models;
 using Server = RSBot.General.Models.Server;
+using System.Threading;
+using System;
 
 namespace RSBot.General.Components;
 
@@ -52,8 +52,7 @@ internal static class AutoLogin
         }
 
         var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-            p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername")
-        );
+            p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername"));
         if (selectedAccount == null)
         {
             _busy = false;
@@ -156,7 +155,7 @@ internal static class AutoLogin
         Log.NotifyLang("LoginCredentials", server.Name);
 
         ushort opcode = 0x6102;
-        if (Game.ClientType >= GameClientType.Chinese)
+        if (Game.ClientType >= GameClientType.Global)
             opcode = 0x610A;
 
         var loginPacket = new Packet(opcode, true);
@@ -166,11 +165,6 @@ internal static class AutoLogin
             loginPacket.WriteString(GlobalConfig.Get<string>("RSBot.RuSro.login"));
             loginPacket.WriteString(GlobalConfig.Get<string>("RSBot.RuSro.password"));
         }
-        else if (Game.ClientType == GameClientType.Japanese)
-        {
-            loginPacket.WriteString(string.Empty);
-            loginPacket.WriteString(GlobalConfig.Get<string>("RSBot.JSRO.token"));
-        }
         else
         {
             loginPacket.WriteString(account.Username);
@@ -179,14 +173,9 @@ internal static class AutoLogin
 
         Game.MacAddress = GenerateMacAddress();
 
-        if (
-            Game.ClientType == GameClientType.Turkey
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.RuSro
-            || Game.ClientType == GameClientType.Korean
-            || Game.ClientType == GameClientType.Japanese
-            || Game.ClientType == GameClientType.Taiwan
-        )
+        if (Game.ClientType == GameClientType.Turkey ||
+            Game.ClientType == GameClientType.VTC_Game ||
+            Game.ClientType == GameClientType.RuSro)
             loginPacket.WriteBytes(Game.MacAddress);
 
         loginPacket.WriteUShort(server.Id);
@@ -226,11 +215,8 @@ internal static class AutoLogin
     /// </summary>
     public static void SendStaticCaptcha()
     {
-        if (
-            !GlobalConfig.Get<bool>("RSBot.General.EnableStaticCaptcha")
-            || !GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin")
-        )
-            return;
+        if (!GlobalConfig.Get<bool>("RSBot.General.EnableStaticCaptcha") ||
+            !GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin")) return;
 
         var captcha = GlobalConfig.Get<string>("RSBot.General.StaticCaptcha");
         captcha ??= string.Empty;

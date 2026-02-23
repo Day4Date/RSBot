@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Forms;
 using RSBot.Core.Extensions;
 using RSBot.Core.Objects;
-using SDUI.Controls;
+
 
 namespace RSBot.Alchemy.Views.Settings;
 
 [ToolboxItem(false)]
-public partial class AttributeInfoPanel : DoubleBufferedControl
+public partial class AttributeInfoPanel : UserControl
 {
     public delegate void OnChangedEventHandler(bool @checked, int maxValue);
 
@@ -33,12 +34,8 @@ public partial class AttributeInfoPanel : DoubleBufferedControl
     /// <param name="group">The group.</param>
     /// <param name="stones">The stones.</param>
     /// <param name="item">The item.</param>
-    public AttributeInfoPanel(
-        ItemAttributeGroup group,
-        IEnumerable<InventoryItem>? stones,
-        InventoryItem item,
-        int maxValue = 22
-    )
+    public AttributeInfoPanel(ItemAttributeGroup group, IEnumerable<InventoryItem>? stones, InventoryItem item,
+        int maxValue = 22)
     {
         CheckForIllegalCrossThreadCalls = false;
 
@@ -121,6 +118,7 @@ public partial class AttributeInfoPanel : DoubleBufferedControl
     public bool Checked
     {
         get => checkSelected.Checked;
+
         set => checkSelected.Checked = GetMaxValue() > _currentAttribute.GetPercentage(_currentAttributeSlot) && value;
     }
 
@@ -165,7 +163,7 @@ public partial class AttributeInfoPanel : DoubleBufferedControl
             2 => 61,
             3 => 80,
             4 => 100,
-            _ => 22,
+            _ => 22
         };
     }
 

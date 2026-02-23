@@ -7,5 +7,7 @@ public sealed class SpawnedNpcNpc : SpawnedNpc
     /// </summary>
     /// <param name="objId">The ref obj id</param>
     public SpawnedNpcNpc(uint objId)
-        : base(objId) { }
+        : base(objId)
+    {
+    }
 }

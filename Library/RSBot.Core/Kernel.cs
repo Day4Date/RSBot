@@ -38,11 +38,6 @@ public static class Kernel
     public static string Language { get; set; }
 
     /// <summary>
-    ///     Launch mode set by command line arguments (launch-client, launch-clientless)
-    /// </summary>
-    public static string LaunchMode { get; set; }
-
-    /// <summary>
     ///     Get environment fixed tick count
     /// </summary>
     public static int TickCount => Environment.TickCount & int.MaxValue;
@@ -66,11 +61,10 @@ public static class Kernel
     /// </summary>
     public static bool Debug
     {
-        get
-        {
-#if DEBUG
+        get {
+            #if DEBUG
             return true;
-#endif
+            #endif
             return GlobalConfig.Get("RSBot.DebugEnvironment", false);
         }
         set => GlobalConfig.Set("RSBot.DebugEnvironments", value);
@@ -81,7 +75,7 @@ public static class Kernel
     /// </summary>
     public static void Initialize()
     {
-        Bot = new Bot();
+        Bot = new();
 
         //Network handlers/hooks
         RegisterNetworkHandlers();
@@ -89,12 +83,8 @@ public static class Kernel
 
         _updaterTokenSource = new CancellationTokenSource();
 
-        Task.Factory.StartNew(
-            ComponentUpdaterAsync,
-            _updaterTokenSource.Token,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Current
-        );
+        Task.Factory.StartNew(ComponentUpdaterAsync, _updaterTokenSource.Token, TaskCreationOptions.LongRunning,
+            TaskScheduler.Current);
     }
 
     private static async Task ComponentUpdaterAsync()
@@ -148,11 +138,9 @@ public static class Kernel
     private static void RegisterNetworkHandlers()
     {
         var type = typeof(IPacketHandler);
-        var types = AppDomain
-            .CurrentDomain.GetAssemblies()
+        var types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
-            .ToArray();
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface).ToArray();
 
         foreach (var handler in types)
         {
@@ -168,11 +156,9 @@ public static class Kernel
     private static void RegisterNetworkHooks()
     {
         var type = typeof(IPacketHook);
-        var types = AppDomain
-            .CurrentDomain.GetAssemblies()
+        var types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
-            .ToArray();
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface).ToArray();
 
         foreach (var hook in types)
         {

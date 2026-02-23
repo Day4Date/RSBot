@@ -68,7 +68,7 @@ public partial class Main : DoubleBufferedControl
                 {
                     Dock = DockStyle.Top,
                     Text = calculator.Label,
-                    Name = calculator.Name,
+                    Name = calculator.Name
                 };
 
                 checkBox.CheckedChanged += Filter_CheckedChanged;
@@ -171,7 +171,9 @@ public partial class Main : DoubleBufferedControl
         {
             UpdateStatistics();
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     /// <summary>

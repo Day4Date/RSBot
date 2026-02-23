@@ -13,4 +13,5 @@ public enum ChatType
     Union = 11,
     Npc = 13, //taken from Cerberus (able to talk SN_TALK_QNO_EU_EASTEU_21_14 stuff)
     Academy = 16,
+    Unique = 0xFF
 }

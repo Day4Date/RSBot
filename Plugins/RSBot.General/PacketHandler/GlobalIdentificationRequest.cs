@@ -46,8 +46,7 @@ internal class GlobalIdentificationRequest : IPacketHandler
         else if (serviceName == "AgentServer")
         {
             var selectedAccount = Accounts.SavedAccounts.Find(p =>
-                p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername")
-            );
+                p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername"));
             if (selectedAccount == null)
             {
                 Log.WarnLang("RSBot.General", "AgentServerConnectingError");
@@ -65,25 +64,14 @@ internal class GlobalIdentificationRequest : IPacketHandler
                 response.WriteString(GlobalConfig.Get<string>("RSBot.RuSro.login"));
                 response.WriteString(Sha256.ComputeHash(GlobalConfig.Get<string>("RSBot.RuSro.password")));
             }
-            else if (Game.ClientType == GameClientType.Japanese)
-            {
-                response.WriteString(GlobalConfig.Get<string>("RSBot.JSRO.login"));
-                response.WriteString(Sha256.ComputeHash(GlobalConfig.Get<string>("RSBot.JSRO.token")));
-            }
             else
             {
-                if (Game.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
-                    response.WriteString(GlobalConfig.Get<string>("RSBot.JCPlanet.login"));
-                else
-                    response.WriteString(selectedAccount.Username);
+                response.WriteString(selectedAccount.Username);
 
-                if (
-                    Game.ClientType == GameClientType.Turkey
-                    || Game.ClientType == GameClientType.VTC_Game
-                    || Game.ClientType == GameClientType.Global
-                    || Game.ClientType == GameClientType.Korean
-                    || Game.ClientType == GameClientType.Taiwan
-                )
+                if (Game.ClientType == GameClientType.Turkey ||
+                    Game.ClientType == GameClientType.VTC_Game ||
+                    Game.ClientType == GameClientType.Global
+                    )
                     response.WriteString(Sha256.ComputeHash(selectedAccount.Password));
                 else
                     response.WriteString(selectedAccount.Password);

@@ -41,16 +41,12 @@ internal class GatewayServerListResponse : IPacketHandler
         while (packet.ReadByte() == 1)
         {
             var id = packet.ReadUShort();
-            var serverName =
-                Game.ClientType == GameClientType.Turkey
-                || Game.ClientType == GameClientType.Global
-                || Game.ClientType == GameClientType.VTC_Game
-                || Game.ClientType == GameClientType.RuSro
-                || Game.ClientType == GameClientType.Korean
-                || Game.ClientType == GameClientType.Japanese
-                || Game.ClientType == GameClientType.Taiwan
-                    ? packet.ReadUnicode()
-                    : packet.ReadString();
+            var serverName = Game.ClientType == GameClientType.Turkey ||
+                            Game.ClientType == GameClientType.Global || 
+                            Game.ClientType == GameClientType.VTC_Game ||
+                            Game.ClientType == GameClientType.RuSro
+                                 ? packet.ReadUnicode()
+                                 : packet.ReadString();
 
             ushort currentCapacity = 0,
                 maxCapacity = 0;
@@ -77,22 +73,19 @@ internal class GatewayServerListResponse : IPacketHandler
                 if (serverName.EndsWith("Thien_Kim"))
                     serverName = serverName.Remove(0, 3);
 
-            var state =
-                Game.ClientType >= GameClientType.Chinese
+            var state = Game.ClientType >= GameClientType.Global
                     ? $"{(ServerStatusModern)status}"
                     : $"{currentCapacity}/{maxCapacity}";
 
-            Serverlist.Servers.Add(
-                new Server
-                {
-                    Id = id,
-                    Name = serverName,
-                    CurrentCapacity = currentCapacity,
-                    MaxCapacity = maxCapacity,
-                    Status = Game.ClientType >= GameClientType.Chinese ? status != 4 : status == 1,
-                    State = state,
-                }
-            );
+            Serverlist.Servers.Add(new Server
+            {
+                Id = id,
+                Name = serverName,
+                CurrentCapacity = currentCapacity,
+                MaxCapacity = maxCapacity,
+                Status = Game.ClientType >= GameClientType.Global ? status != 4 : status == 1,
+                State = state
+            });
 
             if (Game.ClientType == GameClientType.Vietnam)
                 packet.ReadByte(); // FarmId
@@ -109,6 +102,6 @@ internal class GatewayServerListResponse : IPacketHandler
         Crowded,
         Populate,
         Easy,
-        Check,
+        Check
     }
 }

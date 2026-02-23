@@ -58,7 +58,8 @@ internal class BuyItemHook : IPacketHook
         byte[] destinationSlots = null;
         ushort amount = 0;
         byte itemAmount = 0;
-        if (Game.ClientType >= GameClientType.Chinese && Game.ClientType != GameClientType.Rigid)
+        if (Game.ClientType > GameClientType.Chinese &&
+            Game.ClientType != GameClientType.Rigid)
         {
             amount = packet.ReadUShort();
             itemAmount = packet.ReadByte();
@@ -130,14 +131,11 @@ internal class BuyItemHook : IPacketHook
                         var bindingCount = 2;
                         switch (Game.ClientType)
                         {
-                            case GameClientType.Chinese_Old:
                             case GameClientType.Chinese:
                             case GameClientType.Global:
                             case GameClientType.Turkey:
                             case GameClientType.Rigid:
                             case GameClientType.RuSro:
-                            case GameClientType.Japanese:
-                            case GameClientType.Taiwan:
                                 bindingCount = 4;
                                 break;
                             case GameClientType.VTC_Game:

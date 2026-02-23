@@ -38,6 +38,7 @@ internal class PackArchive
     /// </summary>
     public PackHeader Header { get; }
 
+
     /// <summary>
     ///     Gets the cryptographic blowfish for this pack file.
     ///     Can be null if the pack file is not encrypted.
@@ -137,7 +138,7 @@ internal class PackArchive
             NextBlock = 0,
             Payload = new byte[2],
             Size = 0,
-            Type = PackEntryType.Folder,
+            Type = PackEntryType.Folder
         };
     }
 

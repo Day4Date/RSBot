@@ -1,5 +1,6 @@
 ﻿using System;
 using RSBot.Core.Client.ReferenceObjects;
+using RSBot.Core.Components;
 
 namespace RSBot.Core.Objects.Spawn;
 

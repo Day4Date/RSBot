@@ -8,8 +8,10 @@ public sealed class SpawnedMonster : SpawnedNpc
     ///     <inheritdoc />
     /// </summary>
     /// <param name="objId">The ref obj id</param>
-    public SpawnedMonster(uint objId)
-        : base(objId) { }
+    public SpawnedMonster(uint objId) :
+        base(objId)
+    {
+    }
 
     /// <summary>
     ///     Gets or sets the rarity.
@@ -74,7 +76,7 @@ public sealed class SpawnedMonster : SpawnedNpc
         if (Record.IsEventMob)
             Rarity = MonsterRarity.Event;
 
-        if (Game.ClientType > GameClientType.Chinese && Game.ClientType != GameClientType.Japanese)
+        if (Game.ClientType >= GameClientType.Global)
             packet.ReadUInt();
 
         if (Record.TypeID4 == 2 || Record.TypeID4 == 3) //NPC_MOB_TIEF, NPC_MOB_HUNTER

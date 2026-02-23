@@ -1,5 +1,6 @@
-﻿using System.Numerics;
-using RSBot.NavMeshApi.Mathematics;
+﻿using RSBot.NavMeshApi.Mathematics;
+
+using System.Numerics;
 
 namespace RSBot.NavMeshApi.Extensions;
 

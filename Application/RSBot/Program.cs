@@ -2,80 +2,40 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using System.Windows.Forms;
-using CommandLine;
-using CommandLine.Text;
-using RSBot.Core;
+using Avalonia;
+using Avalonia.ReactiveUI;
 using RSBot.Core.Components;
-using RSBot.Views;
+using RSBot.Core;
 
 namespace RSBot;
 
-internal static class Program
+class Program
 {
-    public static string AssemblyTitle = Assembly
-        .GetExecutingAssembly()
-        .GetCustomAttribute<AssemblyProductAttribute>()
-        ?.Product;
+    public static string AssemblyTitle =
+        Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyProductAttribute>()?.Product;
 
     public static string AssemblyVersion =
         $"v{Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version}";
 
-    public static string AssemblyDescription = Assembly
-        .GetExecutingAssembly()
-        .GetCustomAttribute<AssemblyDescriptionAttribute>()
-        ?.Description;
+    public static string AssemblyDescription =
+        Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description;
 
-    public class CommandLineOptions
-    {
-        [Option('c', "character", Required = false, HelpText = "Set the character name to use.")]
-        public string Character { get; set; }
-
-        [Option('p', "profile", Required = false, HelpText = "Set the profile name to use.")]
-        public string Profile { get; set; }
-
-        [Option("launch-client", Required = false, HelpText = "Start with client")]
-        public bool LaunchClient { get; set; }
-
-        [Option("launch-clientless", Required = false, HelpText = "Start clientless")]
-        public bool LaunchClientless { get; set; }
-    }
-
-    private static void DisplayHelp(ParserResult<CommandLineOptions> result)
-    {
-        var helpText = HelpText.AutoBuild(
-            result,
-            h =>
-            {
-                h.AdditionalNewLineAfterOption = false;
-                h.AddDashesToOption = true;
-                return HelpText.DefaultParsingErrorsHandler(result, h);
-            }
-        );
-        MessageBox.Show(
-            helpText,
-            AssemblyTitle + " " + AssemblyVersion,
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Information
-        );
-    }
-
+    // Initialization code. Don't use any Avalonia, third-party APIs or any
+    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
+    // yet and stuff might break.
     [STAThread]
-    private static void Main(string[] args)
+    public static void Main(string[] args)
     {
-        var parser = new Parser(with => with.HelpWriter = Console.Out);
-        var parserResult = parser.ParseArguments<CommandLineOptions>(args);
-
-        parserResult
-            .WithParsed(options =>
+        if (args.Length == 1)
+        {
+            var profile = args[0];
+            if (ProfileManager.ProfileExists(profile))
             {
-                RunOptions(options);
-            })
-            .WithNotParsed(errs =>
-            {
-                DisplayHelp(parserResult);
-                Environment.Exit(1);
-            });
+                ProfileManager.SetSelectedProfile(profile);
+                ProfileManager.IsProfileLoadedByArgs = true;
+                Log.Debug($"Selected profile by args: {profile}");
+            }
+        }
 
         //CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
@@ -85,49 +45,16 @@ internal static class Program
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
-        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
-
-        using Main mainForm = new Main();
-        using SplashScreen splashScreen = new(mainForm);
-
-        splashScreen.ShowDialog();
-
-        splashScreen.Dispose();
-        Application.Run(mainForm);
+        BuildAvaloniaApp()
+        .StartWithClassicDesktopLifetime(args);
     }
 
-    private static void RunOptions(CommandLineOptions options)
-    {
-        if (options.LaunchClient)
-        {
-            Kernel.LaunchMode = "client";
-            Log.Debug("Launching with client dictated by launch paramaters");
-        }
-        else if (options.LaunchClientless)
-        {
-            Kernel.LaunchMode = "clientless";
-            Log.Debug("Launching client as clientless dictated by launch paramaters");
-        }
-
-        if (!string.IsNullOrEmpty(options.Profile))
-        {
-            var profile = options.Profile;
-            if (ProfileManager.ProfileExists(profile))
-                ProfileManager.SetSelectedProfile(profile);
-            else
-                ProfileManager.Add(profile);
-
-            ProfileManager.IsProfileLoadedByArgs = true;
-            Log.Debug($"Selected profile by args: {profile}");
-        }
-
-        if (!string.IsNullOrEmpty(options.Character))
-        {
-            var character = options.Character;
-            ProfileManager.SelectedCharacter = character;
-            Log.Debug($"Selected character by args: {character}");
-        }
-    }
+    // Avalonia configuration, don't remove; also used by visual designer.
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .UseSkia()
+            .WithInterFont()
+            .LogToTrace()
+            .UseReactiveUI();
 }

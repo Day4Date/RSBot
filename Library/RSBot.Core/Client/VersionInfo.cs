@@ -1,7 +1,7 @@
-﻿using System.IO;
-using System.Text;
-using RSBot.Core.Event;
+﻿using RSBot.Core.Event;
 using RSBot.Core.Network.Protocol;
+using System.IO;
+using System.Text;
 
 namespace RSBot.Core.Client;
 
@@ -54,6 +54,7 @@ public class VersionInfo
             var decodedVersionBuffer = blowfish.Decode(versionBuffer);
             result.Version = int.Parse(Encoding.ASCII.GetString(decodedVersionBuffer, 0, 4));
         }
+        
 
         EventManager.FireEvent("OnLoadVersionInfo", result);
         return result;

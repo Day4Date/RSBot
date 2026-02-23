@@ -1,9 +1,10 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using Avalonia.Controls;
+using Avalonia.VisualTree;
 using RSBot.Core;
 using RSBot.Core.Network;
 using RSBot.General.Components;
+using System.Threading;
+using System.Threading.Tasks;
 using View = RSBot.General.Views.View;
 
 namespace RSBot.General.PacketHandler;
@@ -38,28 +39,6 @@ internal class GatewayLoginResponse : IPacketHandler
             AutoLogin.Pending = false;
             View.PendingWindow?.Hide();
             View.PendingWindow?.StopClientlessQueueTask();
-
-            if (Game.ClientType == GameClientType.Japanese)
-            {
-                packet.ReadUInt(); //Token
-                packet.ReadString(); //IP
-                packet.ReadUShort(); //Port
-                GlobalConfig.Set("RSBot.JSRO.login", packet.ReadString()); //Login
-                packet.ReadByte(); //Channel
-            }
-
-            var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-                p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername")
-            );
-
-            if (Game.ClientType == GameClientType.Global && selectedAccount.Channel == 0x02)
-            {
-                packet.ReadUInt(); //Token
-                packet.ReadString(); //IP
-                packet.ReadUShort(); //Port
-                packet.ReadByte(); //Channel
-                GlobalConfig.Set("RSBot.JCPlanet.login", packet.ReadString()); //Login
-            }
 
             return;
         }
@@ -101,11 +80,12 @@ internal class GatewayLoginResponse : IPacketHandler
 
                 Task.Factory.StartNew(() =>
                 {
-                    SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
+                    // TODO: Remove this when Avalonia supports SynchronizationContext
+                    //SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
 
                     View.PendingWindow.Start(count, timestamp);
                     if (!GlobalConfig.Get<bool>("RSBot.General.AutoHidePendingWindow"))
-                        View.PendingWindow.ShowAtTop(View.Instance);
+                        View.PendingWindow.ShowAtTop(View.Instance.FindAncestorOfType<Window>());
                 });
 
                 break;

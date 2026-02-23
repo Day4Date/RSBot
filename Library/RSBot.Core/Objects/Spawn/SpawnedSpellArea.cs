@@ -26,12 +26,16 @@ public class SpawnedSpellArea : SpawnedEntity
     internal static SpawnedSpellArea FromPacket(Packet packet)
     {
         //UNK0
-        if (Game.ClientType >= GameClientType.Chinese)
+        if (Game.ClientType > GameClientType.Chinese)
             packet.ReadUInt();
         else
             packet.ReadUShort();
 
-        var spellArea = new SpawnedSpellArea { SkillId = packet.ReadUInt(), UniqueId = packet.ReadUInt() };
+        var spellArea = new SpawnedSpellArea
+        {
+            SkillId = packet.ReadUInt(),
+            UniqueId = packet.ReadUInt()
+        };
 
         spellArea.Movement.Source = Position.FromPacket(packet);
 

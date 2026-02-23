@@ -7,7 +7,7 @@ namespace RSBot.Core.Components;
 
 public static class CommandManager
 {
-    private static List<ICommandExecutor> _commands;
+    private static List<ICommandExecutor> _commands = [];
 
     /// <summary>
     ///     Initializes the command manager.
@@ -17,11 +17,9 @@ public static class CommandManager
         _commands = new List<ICommandExecutor>(16);
 
         var type = typeof(ICommandExecutor);
-        var types = AppDomain
-            .CurrentDomain.GetAssemblies()
+        var types = AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(s => s.GetTypes())
-            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface)
-            .ToArray();
+            .Where(p => type.IsAssignableFrom(p) && !p.IsInterface).ToArray();
 
         foreach (var handler in types)
         {

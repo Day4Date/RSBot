@@ -12,7 +12,9 @@ public sealed class SpawnedPlayer : SpawnedBionic
     /// </summary>
     /// <param name="objId">The obj id</param>
     public SpawnedPlayer(uint objId)
-        : base(objId) { }
+        : base(objId)
+    {
+    }
 
     /// <summary>
     ///     Gets or sets the name.
@@ -116,7 +118,7 @@ public sealed class SpawnedPlayer : SpawnedBionic
     /// <value>
     ///     The PVP cape.
     /// </value>
-    public PvpFlag PvpCape { get; set; }
+    public PvpCapeType PvpCape { get; set; }
 
     /// <summary>
     ///     Gets or sets the automatic inverst exp.
@@ -203,15 +205,12 @@ public sealed class SpawnedPlayer : SpawnedBionic
             HwanLevel = packet.ReadByte();
 
         if (Game.ClientType > GameClientType.Thailand)
-            PvpCape = (PvpFlag)packet.ReadByte();
+            PvpCape = (PvpCapeType)packet.ReadByte();
 
         AutoInverstExp = (AutoInverstType)packet.ReadByte();
 
-        if (Game.ClientType > GameClientType.Chinese)
+        if (Game.ClientType >= GameClientType.Global)
             packet.ReadByte(); // Archievement Title
-
-        if (Game.ClientType == GameClientType.Taiwan)
-            packet.ReadUInt();
 
         InventorySize = packet.ReadByte();
 
@@ -285,7 +284,7 @@ public sealed class SpawnedPlayer : SpawnedBionic
         Name = packet.ReadString();
         Job = (JobType)packet.ReadByte();
 
-        if (Game.ClientType >= GameClientType.Chinese_Old && WearsJobSuite)
+        if (Game.ClientType >= GameClientType.Chinese && WearsJobSuite)
             if (WearsJobSuite)
             {
                 packet.ReadByte(); // JobRank
@@ -293,7 +292,7 @@ public sealed class SpawnedPlayer : SpawnedBionic
                 packet.ReadByte(); // ??
             }
 
-        if (Game.ClientType < GameClientType.Chinese_Old)
+        if (Game.ClientType < GameClientType.Chinese)
         {
             JobLevel = packet.ReadByte();
             PvpState = (PvpState)packet.ReadByte();
@@ -308,7 +307,7 @@ public sealed class SpawnedPlayer : SpawnedBionic
         ScrollMode = (ScrollMode)packet.ReadByte();
         InteractMode = (InteractMode)packet.ReadByte();
 
-        if (Game.ClientType < GameClientType.Chinese_Old)
+        if (Game.ClientType < GameClientType.Chinese)
             packet.ReadByte(); //unkByte4
 
         var guildName = packet.ReadString();
@@ -324,19 +323,19 @@ public sealed class SpawnedPlayer : SpawnedBionic
             Guild = new SpawnedPlayerGuild { Name = guildName };
         }
 
-        if (Game.ClientType >= GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK2)
+        if (Game.ClientType > GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK2)
             Stall = SpawnedPlayerStall.FromPacket(packet);
-        else if (Game.ClientType < GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK)
+        else if (Game.ClientType <= GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK)
             Stall = SpawnedPlayerStall.FromPacket(packet);
 
-        if (Game.ClientType >= GameClientType.Chinese)
+        if (Game.ClientType >= GameClientType.Global)
             packet.ReadBytes(9);
 
         packet.ReadByte(); //Equipment Cooldown
 
         PKFlag = packet.ReadByte(); //PKFlag
 
-        if (Game.ClientType >= GameClientType.Chinese && Game.ClientType < GameClientType.Rigid)
+        if (Game.ClientType > GameClientType.Chinese && Game.ClientType < GameClientType.Rigid)
             packet.ReadByte(); // 0xFF what flag?
     }
 }

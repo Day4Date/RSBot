@@ -302,6 +302,8 @@ internal class EntityUpdateStatusResponse : IPacketHandler
         if ((updateFlag & EntityUpdateStatusFlag.MP) == EntityUpdateStatusFlag.MP)
             packet.ReadUInt();
 
-        if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect) { }
+        if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect)
+        {
+        }
     }
 }

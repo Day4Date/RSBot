@@ -7,12 +7,12 @@ using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using RSBot.Lure.Components;
-using SDUI.Controls;
+
 
 namespace RSBot.Lure.Views;
 
 [ToolboxItem(false)]
-public partial class Main : DoubleBufferedControl
+public partial class Main : UserControl
 {
     private const int ScriptRecorderOwnerId = 1000;
 
@@ -92,7 +92,7 @@ public partial class Main : DoubleBufferedControl
             MonsterRarity.EliteStrong => 7,
             MonsterRarity.Unique => 8,
             MonsterRarity.Event => 9,
-            _ => 0,
+            _ => 0
         };
 
         _configLocked = false;
@@ -109,7 +109,7 @@ public partial class Main : DoubleBufferedControl
         {
             Name = "Lure",
             Position = LureConfig.Area.Position,
-            Radius = (int)numRadius.Value,
+            Radius = (int)numRadius.Value
         };
 
         LureConfig.UseNormalAttack = checkUseNormalAttack.Checked;
@@ -117,7 +117,6 @@ public partial class Main : DoubleBufferedControl
         LureConfig.StopIfNumMonsterType = checkStopMonsterType.Checked;
         LureConfig.StopIfNumPartyMemberDead = checkStopPartyMemberDead.Checked;
         LureConfig.StopIfNumPartyMember = checkStopPartyMember.Checked;
-        LureConfig.StopIfNumPartyMembersOnSpot = checkNumPartyMembersOnSpot.Checked;
         LureConfig.StayAtCenterFor = checkStayAtCenter.Checked;
         LureConfig.UseScript = radioUseScript.Checked;
         LureConfig.WalkRandomly = radioWalkRandomly.Checked;
@@ -125,7 +124,6 @@ public partial class Main : DoubleBufferedControl
         LureConfig.NumMonsterType = (int)numMonsterType.Value;
         LureConfig.NumPartyMember = (int)numPartyMember.Value;
         LureConfig.NumPartyMemberDead = (int)numPartyMemberDead.Value;
-        LureConfig.NumPartyMembersOnSpot = (int)numPartyMembersOnSpot.Value;
         LureConfig.StayAtCenterForSeconds = (int)numStayAtCenterSeconds.Value;
         LureConfig.NoHowlingAtCenter = checkNoHowlingAtCenter.Checked;
         LureConfig.UseAttackingSkills = checkUseAttackingSkills.Checked;
@@ -139,7 +137,7 @@ public partial class Main : DoubleBufferedControl
         {
             Name = "Lure",
             Position = Game.Player.Position,
-            Radius = (int)numRadius.Value,
+            Radius = (int)numRadius.Value
         };
 
         lblX.Text = LureConfig.Area.Position.X.ToString("0.0");
@@ -149,11 +147,7 @@ public partial class Main : DoubleBufferedControl
     private void btnBrowse_Click(object sender, EventArgs e)
     {
         var fileBrowser = new OpenFileDialog
-        {
-            Title = "RSBot - Choose lure script",
-            Filter = "RSBot script (*.rbs)|*.rbs",
-            Multiselect = false,
-        };
+            { Title = "RSBot - Choose lure script", Filter = "RSBot script (*.rbs)|*.rbs", Multiselect = false };
 
         if (fileBrowser.ShowDialog() != DialogResult.OK)
             return;
@@ -168,22 +162,15 @@ public partial class Main : DoubleBufferedControl
         if (!ScriptManager.Running)
             EventManager.FireEvent("OnShowScriptRecorder", ScriptRecorderOwnerId, true);
         else
-            MessageBox.Show(
-                "Can not record a new script while a script is running! Stop the bot and try again.",
+            MessageBox.Show("Can not record a new script while a script is running! Stop the bot and try again.",
                 "Script manager busy",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
     private void btnBrowseWalkscript_Click(object sender, EventArgs e)
     {
         var fileBrowser = new OpenFileDialog
-        {
-            Title = "RSBot - Choose walkback script",
-            Filter = "RSBot script (*.rbs)|*.rbs",
-            Multiselect = false,
-        };
+            { Title = "RSBot - Choose walkback script", Filter = "RSBot script (*.rbs)|*.rbs", Multiselect = false };
 
         if (fileBrowser.ShowDialog() != DialogResult.OK)
             return;
@@ -206,7 +193,7 @@ public partial class Main : DoubleBufferedControl
             7 => MonsterRarity.EliteStrong,
             8 => MonsterRarity.Unique,
             9 => MonsterRarity.Event,
-            _ => LureConfig.SelectedMonsterType,
+            _ => LureConfig.SelectedMonsterType
         };
     }
 

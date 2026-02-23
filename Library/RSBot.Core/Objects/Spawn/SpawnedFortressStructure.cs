@@ -8,8 +8,10 @@ public sealed class SpawnedFortressStructure : SpawnedNpc
     ///     <inheritdoc />
     /// </summary>
     /// <param name="objId">The ref obj id</param>
-    public SpawnedFortressStructure(uint objId)
-        : base(objId) { }
+    public SpawnedFortressStructure(uint objId) :
+        base(objId)
+    {
+    }
 
     /// <summary>
     /// </summary>

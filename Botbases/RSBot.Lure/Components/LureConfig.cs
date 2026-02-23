@@ -6,12 +6,6 @@ namespace RSBot.Lure.Components;
 
 internal static class LureConfig
 {
-    public static bool UseSpeedDrug
-    {
-        get => PlayerConfig.Get("RSBot.Training.checkUseSpeedDrug", true);
-        set => PlayerConfig.Set("RSBot.Training.checkUseSpeedDrug", value);
-    }
-
     public static bool UseHowlingShout
     {
         get => PlayerConfig.Get("RSBot.Lure.UseHowlingShout", false) && Game.Player.Race == ObjectCountry.Europe;
@@ -64,18 +58,6 @@ internal static class LureConfig
     {
         get => PlayerConfig.Get("RSBot.Lure.NumMonsterType", 3);
         set => PlayerConfig.Set("RSBot.Lure.NumMonsterType", value);
-    }
-
-    public static bool StopIfNumPartyMembersOnSpot
-    {
-        get => PlayerConfig.Get("RSBot.Lure.StopIfNumPartyMembersOnSpot", false);
-        set => PlayerConfig.Set("RSBot.Lure.StopIfNumPartyMembersOnSpot", value);
-    }
-
-    public static int NumPartyMembersOnSpot
-    {
-        get => PlayerConfig.Get("RSBot.Lure.NumPartyMembersOnSpot", 3);
-        set => PlayerConfig.Set("RSBot.Lure.NumPartyMembersOnSpot", value);
     }
 
     public static bool UseScript
@@ -146,7 +128,7 @@ internal static class LureConfig
             {
                 Name = "Lure",
                 Position = new Position(region, x, y, z),
-                Radius = r,
+                Radius = r
             };
         }
         set

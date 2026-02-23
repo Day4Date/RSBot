@@ -44,5 +44,7 @@ internal class LevelUps : IStatisticCalculator
     }
 
     /// <inheritdoc />
-    public void Initialize() { }
+    public void Initialize()
+    {
+    }
 }

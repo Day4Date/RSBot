@@ -22,16 +22,6 @@ public static class GlobalConfig
 
         _config = new Config(path);
 
-        // Migration: PR #934 "RSBot.Default" was moved to "RSBot.Training"
-        if (
-            _config.Exists("RSBot.BotName")
-            && _config.Get<string>("RSBot.BotName") == "RSBot.Default"
-        )
-        {
-            _config.Set("RSBot.BotName", "RSBot.Training");
-            _config.Save();
-        }
-
         Log.Notify("[Global] settings have been loaded!");
     }
 
@@ -92,11 +82,8 @@ public static class GlobalConfig
     /// <param name="key">The key.</param>
     /// <param name="delimiter">The delimiter.</param>
     /// <returns></returns>
-    public static T[] GetArray<T>(
-        string key,
-        char delimiter = ',',
-        StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries
-    )
+    public static T[] GetArray<T>(string key, char delimiter = ',',
+        StringSplitOptions options = StringSplitOptions.RemoveEmptyEntries)
     {
         if (_config == null)
             return new T[] { };
@@ -127,7 +114,7 @@ public static class GlobalConfig
 
         _config.Save();
 
-        Log.Notify("[Global] settings have been saved!");
+        Log.Notify("[Global] have been saved!");
         EventManager.FireEvent("OnSaveGlobalConfig");
     }
 }

@@ -43,9 +43,8 @@ internal class EntityUpdateStateResponse : IPacketHandler
 
                 entity.State.LifeState = (LifeState)state;
                 if ( /*uniqueId == Game.SelectedEntity?.UniqueId || */
-                    Game.Player.GetAttackers().Any(e => e.UniqueId == uniqueId)
-                    && entity.State.LifeState == LifeState.Dead
-                )
+                    Game.Player.GetAttackers().Any(e => e.UniqueId == uniqueId) &&
+                    entity.State.LifeState == LifeState.Dead)
                     EventManager.FireEvent("OnKillEnemy");
 
                 if (uniqueId == Game.SelectedEntity?.UniqueId && entity.State.LifeState == LifeState.Dead)
@@ -87,7 +86,7 @@ internal class EntityUpdateStateResponse : IPacketHandler
             case 4:
 
                 entity.State.BodyState = (BodyState)state;
-
+                
                 EventManager.FireEvent("OnUpdateEntityBodyState", uniqueId);
                 break;
 

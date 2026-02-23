@@ -1,41 +1,28 @@
-﻿using RSBot.Core;
+﻿using System.Windows.Forms;
+using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using RSBot.Core.Plugins;
 using RSBot.Lure.Bundle;
 using RSBot.Lure.Components;
-using System;
-using System.Windows.Forms;
 
 namespace RSBot.Lure;
 
 public class LureBotbase : IBotbase
 {
     private bool _interrupted;
-
-    /// <inheritdoc />
-    public string Author => "RSBot Team";
-
-    /// <inheritdoc />
-    public string Description => "Botbase focused on luring mobs in the best areas of the game.";
-
-    /// <inheritdoc />
     public string Name => "RSBot.Lure";
 
-    /// <inheritdoc />
-    public string Title => "Lure";
+    public string DisplayName => "Lure";
 
-    /// <inheritdoc />
-    public string Version => "1.0.0";
+    public string TabText => DisplayName;
 
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
-
-    /// <inheritdoc />
     public Area Area => LureConfig.Area;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Ticks this instance. It's the botbase main-loop
+    /// </summary>
     public void Tick()
     {
         if (!Kernel.Bot.Running)
@@ -54,8 +41,8 @@ public class LureBotbase : IBotbase
             return;
         }
 
-        EventManager.FireEvent("Bundle.Resurrect.Invoke");
         EventManager.FireEvent("Bundle.Buff.Invoke");
+        EventManager.FireEvent("Bundle.Resurrection.Invoke");
         EventManager.FireEvent("Bundle.PartyBuffing.Invoke");
 
         var interruptMessage = LoopConditionValidator.CheckLoopConditions();
@@ -79,9 +66,7 @@ public class LureBotbase : IBotbase
         if (Game.Player.HasActiveVehicle)
             Game.Player.Vehicle.Dismount();
 
-        if (LureConfig.UseHowlingShout)
-            HowlingShoutBundle.Tick();
-
+        HowlingShoutBundle.Tick();
         TargetBundle.Tick();
         AttackBundle.Tick();
         MovementBundle.Tick();
@@ -90,16 +75,23 @@ public class LureBotbase : IBotbase
             EventManager.FireEvent("Bundle.Loot.Invoke");
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets the view.
+    /// </summary>
+    /// <returns></returns>
     public Control View => Views.View.Main;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Starts this instance.
+    /// </summary>
     public void Start()
     {
         Log.Notify("[Lure] bot started!");
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Stops this instance.
+    /// </summary>
     public void Stop()
     {
         EventManager.FireEvent("Bundle.Loop.Stop");
@@ -110,29 +102,16 @@ public class LureBotbase : IBotbase
         Log.Notify("[Lure] bot stopped!");
     }
 
-    /// <inheritdoc />
-    public void Translate()
-    {
-        LanguageManager.Translate(View, Kernel.Language);
-    }
-
-    /// <inheritdoc />
-    public void Initialize()
+    public void Register()
     {
         Log.Debug("[Lure] Botbase registered to the kernel!");
     }
 
-    /// <inheritdoc />
-    public void Enable()
+    /// <summary>
+    ///     Translate the botbase plugin
+    /// </summary>
+    public void Translate()
     {
-        if (View != null)
-            View.Enabled = true;
-    }
-
-    /// <inheritdoc />
-    public void Disable()
-    {
-        if (View != null)
-            View.Enabled = false;
+        LanguageManager.Translate(View, Kernel.Language);
     }
 }

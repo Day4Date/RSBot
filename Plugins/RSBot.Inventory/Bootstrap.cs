@@ -1,41 +1,49 @@
-﻿using System.Windows.Forms;
+using Avalonia.Controls;
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Plugins;
-using RSBot.Inventory.Subscriber;
+using RSBot.Inventory.Subscribers;
 
 namespace RSBot.Inventory;
 
+/// <summary>
+/// Bootstrap class for the inventory plugin
+/// </summary>
 public class Bootstrap : IPlugin
 {
-    /// <inheritdoc />
-    public string Author => "RSBot Team";
+    /// <summary>
+    /// Gets the internal name of the plugin
+    /// </summary>
+    public string InternalName => "RSBot.Inventory";
 
-    /// <inheritdoc />
-    public string Description => "Provides inventory management features, including item usage and purchasing.";
+    /// <summary>
+    /// Gets the display name of the plugin
+    /// </summary>
+    public string DisplayName => "Inventory";
 
-    /// <inheritdoc />
-    public string Name => "RSBot.Inventory";
-
-    /// <inheritdoc />
-    public string Title => "Inventory";
-
-    /// <inheritdoc />
-    public string Version => "1.0.0";
-
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
-
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a value indicating whether the plugin should be displayed as a tab
+    /// </summary>
     public bool DisplayAsTab => true;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the display order of the plugin
+    /// </summary>
     public int Index => 4;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a value indicating whether the plugin requires the game to be running
+    /// </summary>
     public bool RequireIngame => true;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the main view of the plugin
+    /// </summary>
+    public Control View => Views.View.Instance;
+
+    /// <summary>
+    /// Initializes the plugin
+    /// </summary>
     public void Initialize()
     {
         BuyItemSubscriber.SubscribeEvents();
@@ -43,32 +51,11 @@ public class Bootstrap : IPlugin
         UseItemAtTrainplaceSubscriber.SubscribeEvents();
     }
 
-    /// <inheritdoc />
-    public Control View => Views.View.Instance;
-
-    /// <inheritdoc />
+    /// <summary>
+    /// Translates the plugin's UI elements
+    /// </summary>
     public void Translate()
     {
         LanguageManager.Translate(View, Kernel.Language);
     }
-
-    /// <inheritdoc />
-    public void OnLoadCharacter()
-    {
-        // do nothing
-    }
-
-    /// <inheritdoc />
-    public void Enable()
-    {
-        if (View != null)
-            View.Enabled = true;
-    }
-
-    /// <inheritdoc />
-    public void Disable()
-    {
-        if (View != null)
-            View.Enabled = false;
-    }
-}
+} 

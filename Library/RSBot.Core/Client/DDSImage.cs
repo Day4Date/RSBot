@@ -1,5 +1,6 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
+﻿using Avalonia;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using System.Runtime.InteropServices;
 
 namespace RSBot.Core.Client;
@@ -34,106 +35,15 @@ public class DDSImage
 
     private static readonly int[] BIT5 =
     {
-        0,
-        8,
-        16,
-        25,
-        33,
-        41,
-        49,
-        58,
-        66,
-        74,
-        82,
-        90,
-        99,
-        107,
-        115,
-        123,
-        132,
-        140,
-        148,
-        156,
-        165,
-        173,
-        181,
-        189,
-        197,
-        206,
-        214,
-        222,
-        230,
-        239,
-        247,
-        255,
+        0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132, 140, 148, 156, 165, 173, 181, 189, 197,
+        206, 214, 222, 230, 239, 247, 255
     };
 
     private static readonly int[] BIT6 =
     {
-        0,
-        4,
-        8,
-        12,
-        16,
-        20,
-        24,
-        28,
-        32,
-        36,
-        40,
-        45,
-        49,
-        53,
-        57,
-        61,
-        65,
-        69,
-        73,
-        77,
-        81,
-        85,
-        89,
-        93,
-        97,
-        101,
-        105,
-        109,
-        113,
-        117,
-        121,
-        125,
-        130,
-        134,
-        138,
-        142,
-        146,
-        150,
-        154,
-        158,
-        162,
-        166,
-        170,
-        174,
-        178,
-        182,
-        186,
-        190,
-        194,
-        198,
-        202,
-        206,
-        210,
-        215,
-        219,
-        223,
-        227,
-        231,
-        235,
-        239,
-        243,
-        247,
-        251,
-        255,
+        0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97, 101, 105, 109,
+        113, 117, 121, 125, 130, 134, 138, 142, 146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198,
+        202, 206, 210, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251, 255
     };
 
     private static readonly int[] R5G6B5_MASKS = { 0xF800, 0x07E0, 0x001F, 0x0000 };
@@ -145,18 +55,14 @@ public class DDSImage
 
     public static int GetHeight(byte[] buffer)
     {
-        return (buffer[12] & 0xFF)
-            | ((buffer[13] & 0xFF) << 8)
-            | ((buffer[14] & 0xFF) << 16)
-            | ((buffer[15] & 0xFF) << 24);
+        return (buffer[12] & 0xFF) | ((buffer[13] & 0xFF) << 8) | ((buffer[14] & 0xFF) << 16) |
+               ((buffer[15] & 0xFF) << 24);
     }
 
     public static int GetWidth(byte[] buffer)
     {
-        return (buffer[16] & 0xFF)
-            | ((buffer[17] & 0xFF) << 8)
-            | ((buffer[18] & 0xFF) << 16)
-            | ((buffer[19] & 0xFF) << 24);
+        return (buffer[16] & 0xFF) | ((buffer[17] & 0xFF) << 8) | ((buffer[18] & 0xFF) << 16) |
+               ((buffer[19] & 0xFF) << 24);
     }
 
     public static int[] Read(byte[] buffer, Colour color, int mipmapLevel)
@@ -164,11 +70,8 @@ public class DDSImage
         // header
         var width = GetWidth(buffer);
         var height = GetHeight(buffer);
-        var mipmap =
-            (buffer[28] & 0xFF)
-            | ((buffer[29] & 0xFF) << 8)
-            | ((buffer[30] & 0xFF) << 16)
-            | ((buffer[31] & 0xFF) << 24);
+        var mipmap = (buffer[28] & 0xFF) | ((buffer[29] & 0xFF) << 8) | ((buffer[30] & 0xFF) << 16) |
+                     ((buffer[31] & 0xFF) << 24);
 
         // type
         var type = GetType(buffer);
@@ -272,21 +175,25 @@ public class DDSImage
         return pixels;
     }
 
-    public static Bitmap ToBitmap(byte[] ddsBytes)
+    public static WriteableBitmap ToBitmap(byte[] ddsBytes)
     {
-        var Width = GetWidth(ddsBytes);
-        var Height = GetHeight(ddsBytes);
-        var PixelsData = Read(ddsBytes, Colour.ARGB, 0);
+        var width = GetWidth(ddsBytes);
+        var height = GetHeight(ddsBytes);
+        var pixelsData = Read(ddsBytes, Colour.ARGB, 0);
 
-        if (PixelsData == null)
-            return new Bitmap(256, 256);
-        var BMP = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
-        var BMPData = BMP.LockBits(new Rectangle(0, 0, Width, Height), ImageLockMode.WriteOnly, BMP.PixelFormat);
-        Marshal.Copy(PixelsData, 0, BMPData.Scan0, PixelsData.Length);
-        BMP.UnlockBits(BMPData);
-        BMPData = null;
-        PixelsData = null;
-        return BMP;
+        if (pixelsData == null)
+        {
+            return new WriteableBitmap(new PixelSize(256, 256), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+        }
+
+        var bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+
+        using (var fb = bitmap.Lock())
+        {
+            Marshal.Copy(pixelsData, 0, fb.Address, pixelsData.Length);
+        }
+
+        return bitmap;
     }
 
     private static int[] decodeDXT1(int width, int height, int offset, byte[] buffer, Colour color)
@@ -304,21 +211,17 @@ public class DDSImage
             index += 2;
             for (var k = 0; k < 4; k++)
             {
-                if (4 * i + k >= height)
-                    break;
+                if (4 * i + k >= height) break;
                 var t0 = buffer[index] & 0x03;
                 var t1 = (buffer[index] & 0x0C) >> 2;
                 var t2 = (buffer[index] & 0x30) >> 4;
                 var t3 = (buffer[index++] & 0xC0) >> 6;
                 pixels[4 * width * i + 4 * j + width * k + 0] = getDXTColor(c0, c1, 0xFF, t0, color);
-                if (4 * j + 1 >= width)
-                    continue;
+                if (4 * j + 1 >= width) continue;
                 pixels[4 * width * i + 4 * j + width * k + 1] = getDXTColor(c0, c1, 0xFF, t1, color);
-                if (4 * j + 2 >= width)
-                    continue;
+                if (4 * j + 2 >= width) continue;
                 pixels[4 * width * i + 4 * j + width * k + 2] = getDXTColor(c0, c1, 0xFF, t2, color);
-                if (4 * j + 3 >= width)
-                    continue;
+                if (4 * j + 3 >= width) continue;
                 pixels[4 * width * i + 4 * j + width * k + 3] = getDXTColor(c0, c1, 0xFF, t3, color);
             }
         }
@@ -359,21 +262,17 @@ public class DDSImage
             index += 2;
             for (var k = 0; k < 4; k++)
             {
-                if (4 * i + k >= height)
-                    break;
+                if (4 * i + k >= height) break;
                 var t0 = buffer[index] & 0x03;
                 var t1 = (buffer[index] & 0x0C) >> 2;
                 var t2 = (buffer[index] & 0x30) >> 4;
                 var t3 = (buffer[index++] & 0xC0) >> 6;
                 pixels[4 * width * i + 4 * j + width * k + 0] = getDXTColor(c0, c1, alphaTable[4 * k + 0], t0, color);
-                if (4 * j + 1 >= width)
-                    continue;
+                if (4 * j + 1 >= width) continue;
                 pixels[4 * width * i + 4 * j + width * k + 1] = getDXTColor(c0, c1, alphaTable[4 * k + 1], t1, color);
-                if (4 * j + 2 >= width)
-                    continue;
+                if (4 * j + 2 >= width) continue;
                 pixels[4 * width * i + 4 * j + width * k + 2] = getDXTColor(c0, c1, alphaTable[4 * k + 2], t2, color);
-                if (4 * j + 3 >= width)
-                    continue;
+                if (4 * j + 3 >= width) continue;
                 pixels[4 * width * i + 4 * j + width * k + 3] = getDXTColor(c0, c1, alphaTable[4 * k + 3], t3, color);
             }
         }
@@ -435,43 +334,23 @@ public class DDSImage
                 var t2 = (buffer[index] & 0x30) >> 4;
                 var t3 = (buffer[index++] & 0xC0) >> 6;
 
-                pixels[4 * width * i + 4 * j + width * k + 0] = getDXTColor(
-                    c0,
-                    c1,
-                    getDXT5Alpha(a0, a1, alphaTable[4 * k + 0]),
-                    t0,
-                    color
-                );
+                pixels[4 * width * i + 4 * j + width * k + 0] =
+                    getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4 * k + 0]), t0, color);
                 if (4 * j + 1 >= width)
                     continue;
 
-                pixels[4 * width * i + 4 * j + width * k + 1] = getDXTColor(
-                    c0,
-                    c1,
-                    getDXT5Alpha(a0, a1, alphaTable[4 * k + 1]),
-                    t1,
-                    color
-                );
+                pixels[4 * width * i + 4 * j + width * k + 1] =
+                    getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4 * k + 1]), t1, color);
                 if (4 * j + 2 >= width)
                     continue;
 
-                pixels[4 * width * i + 4 * j + width * k + 2] = getDXTColor(
-                    c0,
-                    c1,
-                    getDXT5Alpha(a0, a1, alphaTable[4 * k + 2]),
-                    t2,
-                    color
-                );
+                pixels[4 * width * i + 4 * j + width * k + 2] =
+                    getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4 * k + 2]), t2, color);
                 if (4 * j + 3 >= width)
                     continue;
 
-                pixels[4 * width * i + 4 * j + width * k + 3] = getDXTColor(
-                    c0,
-                    c1,
-                    getDXT5Alpha(a0, a1, alphaTable[4 * k + 3]),
-                    t3,
-                    color
-                );
+                pixels[4 * width * i + 4 * j + width * k + 3] =
+                    getDXTColor(c0, c1, getDXT5Alpha(a0, a1, alphaTable[4 * k + 3]), t3, color);
             }
         }
 
@@ -483,42 +362,26 @@ public class DDSImage
         if (a0 > a1)
             switch (t)
             {
-                case 0:
-                    return a0;
-                case 1:
-                    return a1;
-                case 2:
-                    return (6 * a0 + a1) / 7;
-                case 3:
-                    return (5 * a0 + 2 * a1) / 7;
-                case 4:
-                    return (4 * a0 + 3 * a1) / 7;
-                case 5:
-                    return (3 * a0 + 4 * a1) / 7;
-                case 6:
-                    return (2 * a0 + 5 * a1) / 7;
-                case 7:
-                    return (a0 + 6 * a1) / 7;
+                case 0: return a0;
+                case 1: return a1;
+                case 2: return (6 * a0 + a1) / 7;
+                case 3: return (5 * a0 + 2 * a1) / 7;
+                case 4: return (4 * a0 + 3 * a1) / 7;
+                case 5: return (3 * a0 + 4 * a1) / 7;
+                case 6: return (2 * a0 + 5 * a1) / 7;
+                case 7: return (a0 + 6 * a1) / 7;
             }
         else
             switch (t)
             {
-                case 0:
-                    return a0;
-                case 1:
-                    return a1;
-                case 2:
-                    return (4 * a0 + a1) / 5;
-                case 3:
-                    return (3 * a0 + 2 * a1) / 5;
-                case 4:
-                    return (2 * a0 + 3 * a1) / 5;
-                case 5:
-                    return (a0 + 4 * a1) / 5;
-                case 6:
-                    return 0;
-                case 7:
-                    return 255;
+                case 0: return a0;
+                case 1: return a1;
+                case 2: return (4 * a0 + a1) / 5;
+                case 3: return (3 * a0 + 2 * a1) / 5;
+                case 4: return (2 * a0 + 3 * a1) / 5;
+                case 5: return (a0 + 4 * a1) / 5;
+                case 6: return 0;
+                case 7: return 255;
             }
 
         return 0;
@@ -528,14 +391,10 @@ public class DDSImage
     {
         switch (t)
         {
-            case 0:
-                return getDXTColor1(c0, a, color);
-            case 1:
-                return getDXTColor1(c1, a, color);
-            case 2:
-                return c0 > c1 ? getDXTColor2_1(c0, c1, a, color) : getDXTColor1_1(c0, c1, a, color);
-            case 3:
-                return c0 > c1 ? getDXTColor2_1(c1, c0, a, color) : 0;
+            case 0: return getDXTColor1(c0, a, color);
+            case 1: return getDXTColor1(c1, a, color);
+            case 2: return c0 > c1 ? getDXTColor2_1(c0, c1, a, color) : getDXTColor1_1(c0, c1, a, color);
+            case 3: return c0 > c1 ? getDXTColor2_1(c1, c0, a, color) : 0;
         }
 
         return 0;
@@ -571,140 +430,79 @@ public class DDSImage
     {
         var type = 0;
 
-        var flags =
-            (buffer[80] & 0xFF)
-            | ((buffer[81] & 0xFF) << 8)
-            | ((buffer[82] & 0xFF) << 16)
-            | ((buffer[83] & 0xFF) << 24);
+        var flags = (buffer[80] & 0xFF) | ((buffer[81] & 0xFF) << 8) | ((buffer[82] & 0xFF) << 16) |
+                    ((buffer[83] & 0xFF) << 24);
 
         if ((flags & 0x04) != 0)
         {
             // DXT
-            type =
-                ((buffer[84] & 0xFF) << 24)
-                | ((buffer[85] & 0xFF) << 16)
-                | ((buffer[86] & 0xFF) << 8)
-                | (buffer[87] & 0xFF);
+            type = ((buffer[84] & 0xFF) << 24) | ((buffer[85] & 0xFF) << 16) | ((buffer[86] & 0xFF) << 8) |
+                   (buffer[87] & 0xFF);
         }
         else if ((flags & 0x40) != 0)
         {
             // RGB
-            var bitCount =
-                (buffer[88] & 0xFF)
-                | ((buffer[89] & 0xFF) << 8)
-                | ((buffer[90] & 0xFF) << 16)
-                | ((buffer[91] & 0xFF) << 24);
-            var redMask =
-                (buffer[92] & 0xFF)
-                | ((buffer[93] & 0xFF) << 8)
-                | ((buffer[94] & 0xFF) << 16)
-                | ((buffer[95] & 0xFF) << 24);
-            var greenMask =
-                (buffer[96] & 0xFF)
-                | ((buffer[97] & 0xFF) << 8)
-                | ((buffer[98] & 0xFF) << 16)
-                | ((buffer[99] & 0xFF) << 24);
-            var blueMask =
-                (buffer[100] & 0xFF)
-                | ((buffer[101] & 0xFF) << 8)
-                | ((buffer[102] & 0xFF) << 16)
-                | ((buffer[103] & 0xFF) << 24);
-            var alphaMask =
-                (flags & 0x01) != 0
-                    ? (buffer[104] & 0xFF)
-                        | ((buffer[105] & 0xFF) << 8)
-                        | ((buffer[106] & 0xFF) << 16)
-                        | ((buffer[107] & 0xFF) << 24)
-                    : 0; // 0x01 alpha
+            var bitCount = (buffer[88] & 0xFF) | ((buffer[89] & 0xFF) << 8) | ((buffer[90] & 0xFF) << 16) |
+                           ((buffer[91] & 0xFF) << 24);
+            var redMask = (buffer[92] & 0xFF) | ((buffer[93] & 0xFF) << 8) | ((buffer[94] & 0xFF) << 16) |
+                          ((buffer[95] & 0xFF) << 24);
+            var greenMask = (buffer[96] & 0xFF) | ((buffer[97] & 0xFF) << 8) | ((buffer[98] & 0xFF) << 16) |
+                            ((buffer[99] & 0xFF) << 24);
+            var blueMask = (buffer[100] & 0xFF) | ((buffer[101] & 0xFF) << 8) | ((buffer[102] & 0xFF) << 16) |
+                           ((buffer[103] & 0xFF) << 24);
+            var alphaMask = (flags & 0x01) != 0
+                ? (buffer[104] & 0xFF) | ((buffer[105] & 0xFF) << 8) | ((buffer[106] & 0xFF) << 16) |
+                  ((buffer[107] & 0xFF) << 24)
+                : 0; // 0x01 alpha
 
             if (bitCount == 16)
             {
-                if (
-                    redMask == A1R5G5B5_MASKS[0]
-                    && greenMask == A1R5G5B5_MASKS[1]
-                    && blueMask == A1R5G5B5_MASKS[2]
-                    && alphaMask == A1R5G5B5_MASKS[3]
-                )
+                if (redMask == A1R5G5B5_MASKS[0] && greenMask == A1R5G5B5_MASKS[1] && blueMask == A1R5G5B5_MASKS[2] &&
+                    alphaMask == A1R5G5B5_MASKS[3])
                     // A1R5G5B5
                     type = A1R5G5B5;
-                else if (
-                    redMask == X1R5G5B5_MASKS[0]
-                    && greenMask == X1R5G5B5_MASKS[1]
-                    && blueMask == X1R5G5B5_MASKS[2]
-                    && alphaMask == X1R5G5B5_MASKS[3]
-                )
+                else if (redMask == X1R5G5B5_MASKS[0] && greenMask == X1R5G5B5_MASKS[1] &&
+                         blueMask == X1R5G5B5_MASKS[2] && alphaMask == X1R5G5B5_MASKS[3])
                     // X1R5G5B5
                     type = X1R5G5B5;
-                else if (
-                    redMask == A4R4G4B4_MASKS[0]
-                    && greenMask == A4R4G4B4_MASKS[1]
-                    && blueMask == A4R4G4B4_MASKS[2]
-                    && alphaMask == A4R4G4B4_MASKS[3]
-                )
+                else if (redMask == A4R4G4B4_MASKS[0] && greenMask == A4R4G4B4_MASKS[1] &&
+                         blueMask == A4R4G4B4_MASKS[2] && alphaMask == A4R4G4B4_MASKS[3])
                     // A4R4G4B4
                     type = A4R4G4B4;
-                else if (
-                    redMask == X4R4G4B4_MASKS[0]
-                    && greenMask == X4R4G4B4_MASKS[1]
-                    && blueMask == X4R4G4B4_MASKS[2]
-                    && alphaMask == X4R4G4B4_MASKS[3]
-                )
+                else if (redMask == X4R4G4B4_MASKS[0] && greenMask == X4R4G4B4_MASKS[1] &&
+                         blueMask == X4R4G4B4_MASKS[2] && alphaMask == X4R4G4B4_MASKS[3])
                     // X4R4G4B4
                     type = X4R4G4B4;
-                else if (
-                    redMask == R5G6B5_MASKS[0]
-                    && greenMask == R5G6B5_MASKS[1]
-                    && blueMask == R5G6B5_MASKS[2]
-                    && alphaMask == R5G6B5_MASKS[3]
-                )
+                else if (redMask == R5G6B5_MASKS[0] && greenMask == R5G6B5_MASKS[1] && blueMask == R5G6B5_MASKS[2] &&
+                         alphaMask == R5G6B5_MASKS[3])
                     // R5G6B5
                     type = R5G6B5;
                 // Unsupported 16bit RGB image
             }
             else if (bitCount == 24)
             {
-                if (
-                    redMask == R8G8B8_MASKS[0]
-                    && greenMask == R8G8B8_MASKS[1]
-                    && blueMask == R8G8B8_MASKS[2]
-                    && alphaMask == R8G8B8_MASKS[3]
-                )
+                if (redMask == R8G8B8_MASKS[0] && greenMask == R8G8B8_MASKS[1] && blueMask == R8G8B8_MASKS[2] &&
+                    alphaMask == R8G8B8_MASKS[3])
                     // R8G8B8
                     type = R8G8B8;
                 // Unsupported 24bit RGB image
             }
             else if (bitCount == 32)
             {
-                if (
-                    redMask == A8B8G8R8_MASKS[0]
-                    && greenMask == A8B8G8R8_MASKS[1]
-                    && blueMask == A8B8G8R8_MASKS[2]
-                    && alphaMask == A8B8G8R8_MASKS[3]
-                )
+                if (redMask == A8B8G8R8_MASKS[0] && greenMask == A8B8G8R8_MASKS[1] && blueMask == A8B8G8R8_MASKS[2] &&
+                    alphaMask == A8B8G8R8_MASKS[3])
                     // A8B8G8R8
                     type = A8B8G8R8;
-                else if (
-                    redMask == X8B8G8R8_MASKS[0]
-                    && greenMask == X8B8G8R8_MASKS[1]
-                    && blueMask == X8B8G8R8_MASKS[2]
-                    && alphaMask == X8B8G8R8_MASKS[3]
-                )
+                else if (redMask == X8B8G8R8_MASKS[0] && greenMask == X8B8G8R8_MASKS[1] &&
+                         blueMask == X8B8G8R8_MASKS[2] && alphaMask == X8B8G8R8_MASKS[3])
                     // X8B8G8R8
                     type = X8B8G8R8;
-                else if (
-                    redMask == A8R8G8B8_MASKS[0]
-                    && greenMask == A8R8G8B8_MASKS[1]
-                    && blueMask == A8R8G8B8_MASKS[2]
-                    && alphaMask == A8R8G8B8_MASKS[3]
-                )
+                else if (redMask == A8R8G8B8_MASKS[0] && greenMask == A8R8G8B8_MASKS[1] &&
+                         blueMask == A8R8G8B8_MASKS[2] && alphaMask == A8R8G8B8_MASKS[3])
                     // A8R8G8B8
                     type = A8R8G8B8;
-                else if (
-                    redMask == X8R8G8B8_MASKS[0]
-                    && greenMask == X8R8G8B8_MASKS[1]
-                    && blueMask == X8R8G8B8_MASKS[2]
-                    && alphaMask == X8R8G8B8_MASKS[3]
-                )
+                else if (redMask == X8R8G8B8_MASKS[0] && greenMask == X8R8G8B8_MASKS[1] &&
+                         blueMask == X8R8G8B8_MASKS[2] && alphaMask == X8R8G8B8_MASKS[3])
                     // X8R8G8B8
                     type = X8R8G8B8;
                 // Unsupported 32bit RGB image
@@ -889,24 +687,9 @@ public class DDSImage
 
     public struct Colour
     {
-        public static Colour ABGR = new()
-        {
-            R = 0,
-            G = 8,
-            B = 16,
-            A = 24,
-        };
-        public static Colour ARGB = new()
-        {
-            R = 16,
-            G = 8,
-            B = 0,
-            A = 24,
-        };
+        public static Colour ABGR = new() { R = 0, G = 8, B = 16, A = 24 };
+        public static Colour ARGB = new() { R = 16, G = 8, B = 0, A = 24 };
 
-        public int R,
-            G,
-            B,
-            A;
+        public int R, G, B, A;
     }
 }

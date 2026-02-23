@@ -21,6 +21,7 @@ internal class TransportBundle
     /// </summary>
     public bool TransportStuck { get; private set; }
 
+
     /// <summary>
     ///     A value indicating if the bundle is currently busy and should block further command execution.
     /// </summary>
@@ -69,14 +70,14 @@ internal class TransportBundle
 
     public void Tick()
     {
-        // Summon new transport?
-        if (!Bundles.RouteBundle.ScriptManaggerIsRunning && Game.Player.JobTransport == null)
+        //Summon new transport?
+        if (Game.Player.JobTransport == null)
         {
             if (Game.Player.State.BattleState == BattleState.InBattle || Game.Player.InAction)
                 return;
 
-            var jobTransportItem = Game
-                .Player.Inventory.GetNormalPartItems(i => i.Record.CodeName.Contains("COS_T_") && i.Record.Tid == 4588)
+            var jobTransportItem = Game.Player.Inventory
+                .GetNormalPartItems(i => i.Record.CodeName.Contains("COS_T_") && i.Record.Tid == 4588)
                 .FirstOrDefault();
 
             if (jobTransportItem != null)
@@ -98,12 +99,8 @@ internal class TransportBundle
         if (!CheckDistanceToTransport() || !CheckTransportIsUnderAttack())
             return;
 
-        if (
-            TradeConfig.MountTransport
-            && !Game.Player.HasActiveVehicle
-            && Game.Player.State.BattleState == BattleState.InPeace
-            && !Game.Player.InAction
-        )
+        if (TradeConfig.MountTransport && !Game.Player.HasActiveVehicle &&
+            Game.Player.State.BattleState == BattleState.InPeace && !Game.Player.InAction)
         {
             Log.Notify("[Trade] Mounting transport");
 
@@ -112,15 +109,13 @@ internal class TransportBundle
             Game.Player.MoveTo(Game.Player.JobTransport.Position);
             Game.Player.JobTransport?.Mount();
         }
-        else if (
-            !TradeConfig.MountTransport
-            && Game.Player.HasActiveVehicle
-            && Game.Player.Vehicle.UniqueId == Game.Player.JobTransport.UniqueId
-        )
+        else if (!TradeConfig.MountTransport && Game.Player.HasActiveVehicle &&
+                 Game.Player.Vehicle.UniqueId == Game.Player.JobTransport.UniqueId)
         {
             Game.Player.JobTransport?.Dismount();
         }
     }
+
 
     /// <summary>
     ///     Checks the vehicle distance to the player.
@@ -137,7 +132,7 @@ internal class TransportBundle
             return false;
         }
 
-        //Player is mounted
+        //Player is mounted 
         if (Game.Player.HasActiveVehicle && Game.Player.Vehicle.UniqueId == Game.Player.JobTransport.UniqueId)
         {
             WaitingForTransport = false;
@@ -153,7 +148,7 @@ internal class TransportBundle
 
             //In some rare cases, the position of the transport is wrong (e.g. Knock-Back skills)
             // That makes the bot thinking that the cos is actually very far away. To re-run the distance calculation
-            // we can move the player to the location were it thinks the COS is located. That way the distance is then re-calculated
+            // we can move the player to the location were it thinks the COS is located. That way the distance is then re-calculated 
             // and the script can continue.
             if (!Game.Player.JobTransport.Movement.HasDestination)
             {

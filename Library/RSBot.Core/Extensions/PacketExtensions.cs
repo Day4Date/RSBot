@@ -14,15 +14,12 @@ public static class PacketExtensions
         switch (Game.ClientType)
         {
             case GameClientType.Thailand:
-            //case GameClientType.Global:
-            //case GameClientType.Turkey:
+            case GameClientType.Global:
+            case GameClientType.Turkey:
             case GameClientType.Korean:
             case GameClientType.Rigid:
-            //case GameClientType.VTC_Game:
+            case GameClientType.VTC_Game:
             case GameClientType.RuSro:
-            case GameClientType.Chinese:
-            case GameClientType.Japanese:
-            case GameClientType.Taiwan:
                 return packet.ReadUnicode();
 
             default:
@@ -40,14 +37,11 @@ public static class PacketExtensions
         switch (Game.ClientType)
         {
             case GameClientType.Thailand:
-            //case GameClientType.Global:
-            //case GameClientType.Turkey:
+            case GameClientType.Global:
+            case GameClientType.Turkey:
             case GameClientType.Korean:
             case GameClientType.Rigid:
             case GameClientType.RuSro:
-            case GameClientType.Chinese:
-            case GameClientType.Japanese:
-            case GameClientType.Taiwan:
                 packet.WriteUnicode(str);
                 break;
 

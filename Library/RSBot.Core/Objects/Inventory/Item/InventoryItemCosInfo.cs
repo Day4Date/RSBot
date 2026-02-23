@@ -21,7 +21,7 @@ public struct InventoryItemCosInfo
     {
         get
         {
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (Game.ClientType >= GameClientType.Chinese)
                 return _level;
 
             var record = Game.ReferenceManager.GetRefObjChar(Id);

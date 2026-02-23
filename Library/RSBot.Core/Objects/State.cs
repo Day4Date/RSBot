@@ -160,21 +160,9 @@ public class State
         if (skill == null || skill.Record == null)
             return false;
 
-        // TODO: Some buffs have Action_Overlap = 0. When filtering only by indirect criteria, such as Action_Overlap,
-        // there are situations when the buff is not added, because another buff is detected as this buff (Physical Screen = Morale Screen).
-        // We need to find an attribute that allows us to accurately determine the inheritance of buffs from another books (Body Deity -> Angel's Body).
-        // As a temporary solution, we are filtering only the skills of one group, but in this case,
-        // buffs from different books/series are not considered inheritable.
         buff = ActiveBuffs.Find(p =>
-            p.Record.Action_Overlap == skill.Record.Action_Overlap
-            && p.Record.Basic_Group.StartsWith(skill.Record.Basic_Group)
-            && p.Record.Basic_Activity == skill.Record.Basic_Activity
-            && p.Record.ReqCast_Weapon1 == skill.Record.ReqCast_Weapon1
-            && p.Record.ReqCast_Weapon2 == skill.Record.ReqCast_Weapon2
-            && p.Record.TargetType_Animal == skill.Record.TargetType_Animal
-            && p.Record.Target_Required == skill.Record.Target_Required
-            && p.Record.ReqLearn_Race == skill.Record.ReqLearn_Race
-        );
+            p.Record.Action_Overlap == skill.Record.Action_Overlap &&
+            p.Record.Basic_Activity == skill.Record.Basic_Activity);
 
         return buff != null;
     }
@@ -208,4 +196,5 @@ public class State
     /// </summary>
     /// <returns></returns>
     public bool HasTwoDots() => ActiveBuffs.Count(b => b.IsDot) >= 2;
+    
 }

@@ -1,43 +1,28 @@
-﻿using RSBot.Core;
+﻿using System.Linq;
+using System.Windows.Forms;
+using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Objects;
 using RSBot.Core.Plugins;
 using RSBot.Trade.Bundle;
 using RSBot.Trade.Components.Scripting;
-using System.Linq;
-using System.Windows.Forms;
 
 namespace RSBot.Trade;
 
 public class TradeBotbase : IBotbase
 {
-    /// <summary>
-    /// Gets a value indicating whether the trade botbase is currently active and running.
-    /// </summary>
     public static bool IsActive => Kernel.Bot?.Botbase.Name == "RSBot.Trade" && Kernel.Bot.Running;
-
-    /// <inheritdoc />
-    public string Author => "RSBot Team";
-
-    /// <inheritdoc />
-    public string Description => "Botbase focused on trading goods in the best areas of the game.";
-
-    /// <inheritdoc />
     public string Name => "RSBot.Trade";
 
-    /// <inheritdoc />
-    public string Title => "Trade";
+    public string DisplayName => "Trade";
 
-    /// <inheritdoc />
-    public string Version => "1.0.0";
+    public string TabText => DisplayName;
 
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
-
-    /// <inheritdoc />
     public Area Area => new();
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Ticks this instance. It's the botbase main-loop
+    /// </summary>
     public void Tick()
     {
         if (!Game.Ready || Game.Player == null)
@@ -46,21 +31,21 @@ public class TradeBotbase : IBotbase
         Bundles.Tick();
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Gets the view.
+    /// </summary>
+    /// <returns></returns>
     public Control View => Views.View.Main;
 
-
-    /// <inheritdoc />
+    /// <summary>
+    ///     Starts this instance.
+    /// </summary>
     public void Start()
     {
         if (!AssertPlayerIsTrader())
         {
-            MessageBox.Show(
-                "The active character can't trade goods! Make sure that you have the correct job and suite equiped.",
-                "Can't trade",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+            MessageBox.Show("The active character is not a trader! Make sure that you have the trader job and suite.",
+                "Not a trader", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Kernel.Bot.Stop();
 
             return;
@@ -69,43 +54,18 @@ public class TradeBotbase : IBotbase
         Bundles.Start();
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///     Stops this instance.
+    /// </summary>
     public void Stop()
     {
         Bundles.Stop();
     }
 
-    /// <inheritdoc />
-    public void Translate()
-    {
-        LanguageManager.Translate(View, Kernel.Language);
-    }
-
     /// <summary>
-    /// Determines whether the current player is considered a trader based on job type and equipped items.
+    ///     Triggered after the botbase was registered to the kernel.
     /// </summary>
-    /// <remarks>A player is considered a trader if they have the appropriate job type and are wearing the
-    /// required job outfit. The criteria may vary depending on the game client type.</remarks>
-    /// <returns>true if the player meets all criteria to be recognized as a trader; otherwise, false.</returns>
-    private bool AssertPlayerIsTrader()
-    {
-        if (Game.Player == null)
-            return false;
-
-        var gameIsJob2 = Game.ClientType > GameClientType.Vietnam;
-        if (!gameIsJob2 && Game.Player.JobInformation is not { Type: JobType.Trade })
-            return false;
-        else if (gameIsJob2 && Game.Player.JobInformation is { Type: JobType.None })
-            return false;
-
-        if (Game.Player.Inventory.GetEquippedPartItems().FirstOrDefault(i => i.Record.IsJobOutfit) == null)
-            return false;
-
-        return true;
-    }
-
-    /// <inheritdoc />
-    public void Initialize()
+    public void Register()
     {
         Log.Debug("[Trade] Botbase registered to the kernel!");
 
@@ -114,17 +74,29 @@ public class TradeBotbase : IBotbase
         Bundles.Initialize();
     }
 
-    /// <inheritdoc />
-    public void Enable()
+    /// <summary>
+    ///     Translate the botbase plugin
+    /// </summary>
+    public void Translate()
     {
-        if (View != null)
-            View.Enabled = true;
+        LanguageManager.Translate(View, Kernel.Language);
     }
 
-    /// <inheritdoc />
-    public void Disable()
+    /// <summary>
+    ///     Returns a value indicating if the active character is a trader
+    /// </summary>
+    /// <returns></returns>
+    private bool AssertPlayerIsTrader()
     {
-        if (View != null)
-            View.Enabled = false;
+        if (Game.Player == null)
+            return false;
+
+        if (Game.Player.JobInformation is not { Type: JobType.Trade })
+            return false;
+
+        if (Game.Player.Inventory.GetEquippedPartItems().FirstOrDefault(i => i.Record.IsJobOutfit) == null)
+            return false;
+
+        return true;
     }
 }

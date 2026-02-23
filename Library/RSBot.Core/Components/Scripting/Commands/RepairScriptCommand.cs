@@ -3,6 +3,7 @@
 namespace RSBot.Core.Components.Scripting.Commands;
 
 internal class RepairScriptCommand : IScriptCommand
+
 {
     #region Properties
 
@@ -28,7 +29,10 @@ internal class RepairScriptCommand : IScriptCommand
     /// <value>
     ///     The arguments.
     /// </value>
-    public Dictionary<string, string> Arguments => new() { { "Codename", "The code name of the NPC" } };
+    public Dictionary<string, string> Arguments => new()
+    {
+        { "Codename", "The code name of the NPC" }
+    };
 
     #endregion Properties
 

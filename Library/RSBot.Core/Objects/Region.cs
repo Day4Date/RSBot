@@ -6,14 +6,11 @@ namespace RSBot.Core.Objects;
 [StructLayout(LayoutKind.Explicit)]
 public struct Region
 {
-    [FieldOffset(0)]
-    public ushort Id;
+    [FieldOffset(0)] public ushort Id;
 
-    [FieldOffset(0)]
-    public byte X;
+    [FieldOffset(0)] public byte X;
 
-    [FieldOffset(sizeof(byte))]
-    public byte Y;
+    [FieldOffset(sizeof(byte))] public byte Y;
 
     public bool IsDungeon => (Id & 0x8000) != 0;
 
@@ -44,7 +41,7 @@ public struct Region
     {
         if (this.IsDungeon)
         {
-            return new[] { this };
+            return new[] {this};
         }
         return new Region[]
         {
@@ -56,7 +53,7 @@ public struct Region
             new((byte)(X + 1), Y), //CR
             new((byte)(X - 1), (byte)(Y - 1)), //BL
             new(X, (byte)(Y - 1)), //BC
-            new((byte)(X + 1), (byte)(Y - 1)), //BR
+            new((byte)(X + 1), (byte)(Y - 1)) //BR
         };
     }
 
@@ -74,6 +71,7 @@ public struct Region
         parsedValue = 0;
         if (!int.TryParse(value, out var parsed))
             return false;
+
         unchecked
         {
             parsedValue = (ushort)parsed;

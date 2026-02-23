@@ -1,14 +1,12 @@
-﻿namespace RSBot.Inventory.Views;
+namespace RSBot.Inventory.Views;
 
+/// <summary>
+/// Static class to manage the main view instance
+/// </summary>
 internal class View
 {
-    private static Main _instance;
-
     /// <summary>
-    ///     Gets or sets the instance.
+    /// Gets the singleton instance of the main view
     /// </summary>
-    /// <value>
-    ///     The instance.
-    /// </value>
-    public static Main Instance => _instance ??= new();
-}
+    public static Main Instance { get; } = new();
+} 

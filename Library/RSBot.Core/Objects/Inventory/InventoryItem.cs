@@ -65,8 +65,7 @@ public class InventoryItem
             if (BindingOptions == null)
                 return _optLevel;
 
-            var advancedElixirOptLevel = BindingOptions
-                .Where(b => b.Type == BindingOptionType.AdvancedElixir)
+            var advancedElixirOptLevel = BindingOptions.Where(b => b.Type == BindingOptionType.AdvancedElixir)
                 .Sum(b => b.Value != null ? b.Value : 0);
 
             if (_optLevel + advancedElixirOptLevel > byte.MaxValue)
@@ -135,17 +134,16 @@ public class InventoryItem
     {
         get
         {
-            //ToDo: Refine this whole check to act 1:1 like the client. I think Action_Overlap is a bitmap and not an actual value to work with.
+            //ToDo: Refine this whole check to act 1:1 like the client. I think Action_Overlap is a bitmap and not an actual value to work with. 
             var refSkill = GetRefSkill();
 
             if (refSkill != null)
                 return Game.Player.State.ActiveBuffs.FirstOrDefault(b =>
-                        b.Record.ID == refSkill.ID || b.Record.Action_Overlap == refSkill.Action_Overlap
-                    ) != null;
+                    b.Record.ID == refSkill.ID || b.Record.Action_Overlap == refSkill.Action_Overlap) != null;
 
             var perk = Game.Player.State.ActiveItemPerks.Values.FirstOrDefault(p =>
-                p.ItemId == Record.ID || (Record.Param1 > 0 && p.Item.Param1 == Record.Param1)
-            );
+                p.ItemId == Record.ID ||
+                (Record.Param1 > 0 && p.Item.Param1 == Record.Param1));
 
             return perk != null;
         }
@@ -167,10 +165,10 @@ public class InventoryItem
         else
             packet.WriteUShort(Record.Tid);
 
-        var asyncCallback = new AwaitCallback(
-            response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
-            0xB04C
-        );
+        var asyncCallback =
+            new AwaitCallback(
+                response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
+                0xB04C);
 
         PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
         asyncCallback.AwaitResponse(500);
@@ -197,10 +195,10 @@ public class InventoryItem
         if (mapId > -1)
             packet.WriteInt(mapId);
 
-        var asyncCallback = new AwaitCallback(
-            response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
-            0xB04C
-        );
+        var asyncCallback =
+            new AwaitCallback(
+                response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
+                0xB04C);
 
         PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
         asyncCallback.AwaitResponse(500);
@@ -234,11 +232,9 @@ public class InventoryItem
     public bool Equip(byte slot)
     {
         var attempt = 0;
-        while (
-            !Game.Player.Inventory.MoveItem(Slot, slot)
-            && Kernel.Bot.Running
-            && Game.Player.State.ScrollState == ScrollState.Cancel
-        )
+        while (!Game.Player.Inventory.MoveItem(Slot, slot) &&
+               Kernel.Bot.Running &&
+               Game.Player.State.ScrollState == ScrollState.Cancel)
         {
             if (attempt++ > 5)
                 return false;
@@ -288,11 +284,10 @@ public class InventoryItem
             MagicOptions = new List<MagicOptionInfo>(),
             BindingOptions = new List<BindingOption>(),
             Amount = 1,
-            Slot = destinationSlot,
+            Slot = destinationSlot
         };
 
-        if (destinationSlot == 0xFE)
-            item.Slot = packet.ReadByte();
+        if (destinationSlot == 0xFE) item.Slot = packet.ReadByte();
 
         if (Game.ClientType > GameClientType.Thailand)
             item.Rental = RentInfo.FromPacket(packet);
@@ -325,17 +320,14 @@ public class InventoryItem
                 var bindingCount = 2;
                 switch (Game.ClientType)
                 {
-                    case GameClientType.Chinese_Old:
                     case GameClientType.Chinese:
                     case GameClientType.Global:
                     case GameClientType.Turkey:
                     case GameClientType.Rigid:
                     case GameClientType.RuSro:
-                    case GameClientType.VTC_Game:
-                    case GameClientType.Japanese:
-                    case GameClientType.Taiwan:
                         bindingCount = 4;
                         break;
+                    case GameClientType.VTC_Game:
                     case GameClientType.Korean:
                         bindingCount = 3;
                         break;
@@ -362,7 +354,7 @@ public class InventoryItem
 
                 if (record.TypeID4 == 2)
                     item.Cos.Rental = RentInfo.FromPacket(packet);
-                else if (Game.ClientType >= GameClientType.Chinese_Old)
+                else if (Game.ClientType >= GameClientType.Chinese)
                     item.Cos.Level = packet.ReadByte(); // cos level
 
                 var buffCount = packet.ReadByte();
@@ -423,6 +415,7 @@ public class InventoryItem
                 packet.ReadString();
         }
 
+
         return item;
     }
 
@@ -442,16 +435,11 @@ public class InventoryItem
 
     public bool CanBeEquipped()
     {
-        if (Record.IsAmmunition)
-            return true;
-        if (!Record.IsEquip)
-            return false;
-        if (Record.ReqLevel1 > Game.Player.Level)
-            return false;
-        if (Record.ReqGender != 2 && Record.ReqGender != (byte)Game.Player.Gender)
-            return false;
-        if (Record.Country != Game.Player.Record.Country)
-            return false;
+        if (Record.IsAmmunition) return true;
+        if (!Record.IsEquip) return false;
+        if (Record.ReqLevel1 > Game.Player.Level) return false;
+        if (Record.ReqGender != 2 && Record.ReqGender != (byte)Game.Player.Gender) return false;
+        if (Record.Country != Game.Player.Record.Country) return false;
 
         return true;
     }
@@ -489,10 +477,5 @@ public class InventoryItem
     public InventoryItem Clone()
     {
         return (InventoryItem)MemberwiseClone();
-    }
-
-    public override int GetHashCode()
-    {
-        return Record.GetHashCode();
     }
 }

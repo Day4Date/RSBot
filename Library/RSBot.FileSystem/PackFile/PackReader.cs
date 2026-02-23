@@ -4,6 +4,7 @@ using RSBot.FileSystem.IO;
 using RSBot.FileSystem.PackFile.Cryptography;
 using RSBot.FileSystem.PackFile.Struct;
 
+
 namespace RSBot.FileSystem.PackFile;
 
 internal class PackReader
@@ -12,12 +13,7 @@ internal class PackReader
     private BsReader _reader;
     private PackResolver _resolver;
 
-    public PackArchive Read(
-        Stream fileStream,
-        Blowfish? blowfish = null,
-        char pathSeparator = '\\',
-        bool caseSensitive = false
-    )
+    public PackArchive Read(Stream fileStream, Blowfish? blowfish = null, char pathSeparator = '\\', bool caseSensitive = false)
     {
         var sw = Stopwatch.StartNew();
 
@@ -34,12 +30,9 @@ internal class PackReader
             var tempChecksum = _blowfish.Encode(Encoding.ASCII.GetBytes(PackHeader.BlowfishChecksumDecoded));
 
             //Check if the security checksum equals the generated checksum
-            if (
-                tempChecksum == null
-                || tempChecksum[0] != header.EncryptionChecksum[0]
-                || tempChecksum[1] != header.EncryptionChecksum[1]
-                || tempChecksum[2] != header.EncryptionChecksum[2]
-            )
+            if (tempChecksum == null || tempChecksum[0] != header.EncryptionChecksum[0]
+                                     || tempChecksum[1] != header.EncryptionChecksum[1]
+                                     || tempChecksum[2] != header.EncryptionChecksum[2])
                 throw new IOException("Failed to open JoymaxPackFile: The password or salt is wrong.");
         }
 
@@ -59,7 +52,7 @@ internal class PackReader
             Version = reader.ReadInt32(),
             Encrypted = reader.ReadByte(),
             EncryptionChecksum = reader.ReadBytes(16),
-            Payload = reader.ReadBytes(205),
+            Payload = reader.ReadBytes(205)
         };
 
         return result;
@@ -69,7 +62,11 @@ internal class PackReader
     {
         _reader.BaseStream.Position = position;
 
-        var block = new PackBlock { Position = position, Entries = ReadEntries(_reader) };
+        var block = new PackBlock
+        {
+            Position = position,
+            Entries = ReadEntries(_reader)
+        };
 
         return block;
     }
@@ -107,7 +104,7 @@ internal class PackReader
                 DataPosition = entryReader.ReadInt64(),
                 Size = entryReader.ReadInt32(),
                 NextBlock = entryReader.ReadInt64(),
-                Payload = entryReader.ReadBytes(2), //Padding to reach 128 bytes length
+                Payload = entryReader.ReadBytes(2) //Padding to reach 128 bytes length
             };
 
         return result;

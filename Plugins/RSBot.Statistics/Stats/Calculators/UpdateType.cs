@@ -1,7 +1,7 @@
 ﻿namespace RSBot.Statistics.Stats.Calculators;
 
-internal enum UpdateType
+public enum UpdateType
 {
     Live,
-    Static,
+    Static
 }

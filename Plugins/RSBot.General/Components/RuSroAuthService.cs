@@ -1,3 +1,10 @@
+using Avalonia.Controls;
+using Avalonia.VisualTree;
+using Newtonsoft.Json;
+using RSBot.Core;
+using RSBot.Core.Components;
+using RSBot.Core.UI;
+using RSBot.General.Views;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -9,11 +16,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using Newtonsoft.Json;
-using RSBot.Core;
-using RSBot.Core.Components;
-using SDUI.Controls;
 
 namespace RSBot.General.Components;
 
@@ -29,12 +31,11 @@ internal static class RuSroAuthService
     public static async Task<bool> Auth()
     {
         var selectedAccount = Accounts.SavedAccounts?.Find(p =>
-            p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername")
-        );
+            p.Username == GlobalConfig.Get<string>("RSBot.General.AutoLoginAccountUsername"));
 
         if (selectedAccount == null)
         {
-            MessageBox.Show("No account selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            await MessageBox.Show("No account selected", "Error", MessageBoxButtons.Ok);
             return false;
         }
 
@@ -71,7 +72,7 @@ internal static class RuSroAuthService
         {
             var msgBoxTitle = LanguageManager.GetLang("RuSroUpdatePinMsgTitle");
             var msgBoxContent = LanguageManager.GetLang("RuSroUpdatePinMsgContent");
-            MessageBox.Show("No Session ID Found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            await MessageBox.Show("No Session ID Found", "Error", MessageBoxButtons.Ok);
             return SESSION_STATE.NO_SESSION_ID;
         }
 
@@ -79,20 +80,18 @@ internal static class RuSroAuthService
         {
             var msgBoxTitle = LanguageManager.GetLang("RuSroUpdatePinMsgTitle");
             var msgBoxContent = LanguageManager.GetLang("RuSroUpdatePinMsgContent");
-            MessageBox.Show("PIN is empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            await MessageBox.Show("PIN is empty", "Error", MessageBoxButtons.Ok);
             return SESSION_STATE.NO_PIN;
         }
 
-        var confirmationRequestContent = new StringContent(
-            JsonConvert.SerializeObject(new { sessionId, code = confirmationCode }),
-            Encoding.UTF8,
-            "application/json"
-        );
+        var confirmationRequestContent = new StringContent(JsonConvert.SerializeObject(new
+        {
+            sessionId,
+            code = confirmationCode
+        }), Encoding.UTF8, "application/json");
 
-        var confirmationResponse = await client.PostAsync(
-            "https://launcherbff.ru.4game.com/api/guard/accesscodes/activate",
-            confirmationRequestContent
-        );
+        var confirmationResponse = await client.PostAsync("https://webbff.ru.4game.ru/api/guard/accesscodes/activate",
+            confirmationRequestContent);
         var confirmationResponseContent = await confirmationResponse.Content.ReadAsStringAsync();
 
         Log.Debug("Activation Response:");
@@ -110,7 +109,7 @@ internal static class RuSroAuthService
             return SESSION_STATE.ALREADY_ACTIVATED;
         }
 
-        MessageBox.Show(confirmationResponseContent, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        await MessageBox.Show(confirmationResponseContent,"Error",  MessageBoxButtons.Ok);
         return SESSION_STATE.INVALID_REQUEST;
     }
 
@@ -119,14 +118,13 @@ internal static class RuSroAuthService
         var parameters = new List<KeyValuePair<string, string>>();
         string refreshToken = GlobalConfig.Get<string>("RSBot.RuSro.refreshToken");
         string accessToken = GlobalConfig.Get<string>("RSBot.RuSro.accessToken");
-        if (
-            !string.IsNullOrEmpty(refreshToken)
-            && !string.IsNullOrEmpty(accessToken)
-            && ExtractUsernameEmailFromToken(accessToken).Contains(username.ToLower())
-        )
+        if (!string.IsNullOrEmpty(refreshToken) && 
+            !string.IsNullOrEmpty(accessToken) && 
+            ExtractUsernameEmailFromToken(accessToken).Contains(username.ToLower()))
         {
             parameters.Add(new KeyValuePair<string, string>("grant_type", "refresh_token"));
             parameters.Add(new KeyValuePair<string, string>("refresh_token", refreshToken));
+
         }
         else
         {
@@ -150,10 +148,8 @@ internal static class RuSroAuthService
         client.DefaultRequestHeaders.Add("Hardware-Id", hwid);
         client.DefaultRequestHeaders.Add("Launcher-Id", launcherId);
 
-        var tokenResponse = await client.PostAsync(
-            "https://launcherbff.ru.4game.com/connect/token",
-            tokenRequestContent
-        );
+        var tokenResponse =
+            await client.PostAsync("https://launcherbff.ru.4game.com/connect/token", tokenRequestContent);
         var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
         return tokenResponseContent;
     }
@@ -166,24 +162,12 @@ internal static class RuSroAuthService
         {
             GlobalConfig.Set("RSBot.RuSro.sessionId", ExtractSessionId(tokenResponseContent));
 
-            string dialogFormTitle = LanguageManager.GetLangBySpecificKey(
-                "RSBot.General",
-                "RuSroConfirmationCodeFormTitle",
-                "Confirmation code"
-            );
-            string dialogTitle = LanguageManager.GetLangBySpecificKey(
-                "RSBot.General",
-                "RuSroConfirmationCodeTitle",
-                "You have got an email with PIN"
-            );
-            string dialogContent = LanguageManager.GetLangBySpecificKey(
-                "RSBot.General",
-                "RuSroConfirmationCodeContent",
-                "Enter it and press OK"
-            );
+            string dialogFormTitle = LanguageManager.GetLangBySpecificKey("RSBot.General", "RuSroConfirmationCodeFormTitle", "Confirmation code");
+            string dialogTitle = LanguageManager.GetLangBySpecificKey("RSBot.General", "RuSroConfirmationCodeTitle", "You have got an email with PIN");
+            string dialogContent = LanguageManager.GetLangBySpecificKey("RSBot.General", "RuSroConfirmationCodeContent", "Enter it and press OK");
 
             var inputDialog = new InputDialog(dialogFormTitle, dialogTitle, dialogContent);
-            if (inputDialog.ShowDialog() != DialogResult.OK)
+            if (await inputDialog.ShowDialog<DialogResult>(View.Instance.FindAncestorOfType<Window>()) != DialogResult.Ok)
                 return string.Empty;
 
             string confirmationCode = (string)inputDialog.Value;
@@ -204,29 +188,19 @@ internal static class RuSroAuthService
 
         if (tokenResponseContent.Contains("unauthorized"))
         {
-            MessageBox.Show(
-                $"Session is expired, try again!\n4game error: {ExtractErrorDescription(tokenResponseContent)}",
-                "Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+            await MessageBox.Show($"Session is expired, try again!\n4game error: {ExtractErrorDescription(tokenResponseContent)}", "Error", MessageBoxButtons.Ok);
             return string.Empty;
         }
 
         if (tokenResponseContent.Contains("auth.datanotfound"))
         {
-            MessageBox.Show(
-                $"Check your login and password!\n4game error: {ExtractErrorDescription(tokenResponseContent)}",
-                "Error",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
+            await MessageBox.Show($"Check your login and password!\n4game error: {ExtractErrorDescription(tokenResponseContent)}", "Error", MessageBoxButtons.Ok);
             return string.Empty;
         }
 
         if (string.IsNullOrEmpty(accessToken))
         {
-            MessageBox.Show(tokenResponseContent, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            await MessageBox.Show(tokenResponseContent, "Error", MessageBoxButtons.Ok);
             return string.Empty;
         }
 
@@ -264,11 +238,9 @@ internal static class RuSroAuthService
         var handler = new JwtSecurityTokenHandler();
         var jwtToken = handler.ReadJwtToken(accessToken);
 
-        string[] result =
-        [
+        string[] result = [
             jwtToken.Claims.FirstOrDefault(c => c.Type == "username")?.Value.ToLower(),
-            jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value.ToLower(),
-        ];
+            jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value.ToLower() ];
         return result;
     }
 
@@ -321,8 +293,9 @@ internal static class RuSroAuthService
         NO_PIN,
         ALREADY_ACTIVATED,
         INVALID_REQUEST,
-        SUCCESSFULLY_ACTIVATED,
+        SUCCESSFULLY_ACTIVATED
     }
+
 
     private static async Task ConnectToWSAndSend()
     {
@@ -343,12 +316,8 @@ internal static class RuSroAuthService
                 await ConnectToWebSocket(clientWebSocket, serverUri);
 
                 string login = await SendGetGameAccountRequest(clientWebSocket, sub);
-                (string extractedLogin, string password) = await SendCreateGameTokenCodeRequest(
-                    clientWebSocket,
-                    accessToken,
-                    login,
-                    sub
-                );
+                (string extractedLogin, string password) =
+                    await SendCreateGameTokenCodeRequest(clientWebSocket, accessToken, login, sub);
 
                 SaveCredentials(extractedLogin, password);
 
@@ -373,10 +342,7 @@ internal static class RuSroAuthService
     {
         return string.Format(
             "wss://launcherbff.ru.4game.com/?token={0}&hardware-id={1}&launcher-id={2}&computer-name={3}",
-            accessToken,
-            hwid,
-            launcherId,
-            GenerateRandomString(8)
+            accessToken, hwid, launcherId, GenerateRandomString(8)
         );
     }
 
@@ -391,8 +357,7 @@ internal static class RuSroAuthService
     {
         string payload = string.Format(
             "{{\"jsonrpc\":\"2.0\",\"method\":\"getGameAccount\",\"params\":{{\"masterId\":\"{0}\",\"toPartnerId\":\"silk-ru\",\"lang\":\"ru\"}},\"id\":\"{1}\"}}",
-            sub,
-            Guid.NewGuid().ToString()
+            sub, Guid.NewGuid().ToString()
         );
 
         Log.Debug($"Sending payload: {payload}");
@@ -408,14 +373,12 @@ internal static class RuSroAuthService
 
             using (JsonDocument document = JsonDocument.Parse(response))
             {
-                if (
-                    document.RootElement.TryGetProperty("notification", out var notification)
-                    && notification.GetString() == "invalidate"
-                    && document.RootElement.TryGetProperty("params", out var paramsElement)
-                    && paramsElement
-                        .EnumerateArray()
-                        .Any(p => p.TryGetProperty("type", out var type) && type.GetString() == "webshopOwnPromoCodes")
-                )
+                if (document.RootElement.TryGetProperty("notification", out var notification) &&
+                    notification.GetString() == "invalidate" &&
+                    document.RootElement.TryGetProperty("params", out var paramsElement) &&
+                    paramsElement.EnumerateArray().Any(p =>
+                        p.TryGetProperty("type", out var type) &&
+                        type.GetString() == "webshopOwnPromoCodes"))
                 {
                     //string getWebshopOwnPromoCodesPayload = $"{{\"jsonrpc\":\"2.0\",\"method\":\"getWebshopOwnPromoCodes\",\"params\":{{ \"userId\":{sub},\"from\":0,\"count\":20,\"lang\":\"ru\"}},\"id\":\"{Guid.NewGuid()}\"}}";
                     //Log.Debug($"Some promocodes has experied. Sending promocodes update request: {getWebshopOwnPromoCodesPayload}");
@@ -426,29 +389,14 @@ internal static class RuSroAuthService
                     continue;
                 }
 
-                if (
-                    document.RootElement.TryGetProperty("notification", out notification)
-                    && notification.GetString() == "invalidate"
-                    && document.RootElement.TryGetProperty("params", out paramsElement)
-                    && paramsElement
-                        .EnumerateArray()
-                        .Any(p => p.TryGetProperty("type", out var type) && type.GetString() == "pushNotification")
-                )
+                if (document.RootElement.TryGetProperty("notification", out notification) &&
+                    notification.GetString() == "invalidate" &&
+                    document.RootElement.TryGetProperty("params", out paramsElement) &&
+                    paramsElement.EnumerateArray().Any(p =>
+                        p.TryGetProperty("type", out var type) &&
+                        type.GetString() == "pushNotification"))
                 {
                     Log.Notify($"4game pushed notification: {response}");
-                    continue;
-                }
-
-                if (
-                    document.RootElement.TryGetProperty("notification", out notification)
-                    && notification.GetString() == "invalidate"
-                    && document.RootElement.TryGetProperty("params", out paramsElement)
-                    && paramsElement
-                        .EnumerateArray()
-                        .Any(p => p.TryGetProperty("type", out var type) && type.GetString() == "webFeed")
-                )
-                {
-                    Log.Notify($"4game pushed webFeed: {response}");
                     continue;
                 }
 
@@ -464,15 +412,10 @@ internal static class RuSroAuthService
         throw new Exception("Max attempts reached, exiting getGameAccount loop.");
     }
 
-    private static async Task<(string, string)> SendCreateGameTokenCodeRequest(
-        ClientWebSocket clientWebSocket,
-        string accessToken,
-        string login,
-        string sub
-    )
+    private static async Task<(string, string)> SendCreateGameTokenCodeRequest(ClientWebSocket clientWebSocket,
+        string accessToken, string login, string sub)
     {
-        string payload =
-            $"{{\"jsonrpc\":\"2.0\",\"method\":\"createGameTokenCode\",\"params\":{{\"accessToken\":\"{accessToken}\",\"ignoreLicenseAcceptance\":false,\"login\":\"{login}\",\"masterId\":\"{sub}\",\"toPartnerId\":\"silk-ru\",\"lang\":\"ru\"}},\"id\":\"{Guid.NewGuid()}\"}}";
+        string payload = $"{{\"jsonrpc\":\"2.0\",\"method\":\"createGameTokenCode\",\"params\":{{\"accessToken\":\"{accessToken}\",\"ignoreLicenseAcceptance\":false,\"login\":\"{login}\",\"masterId\":\"{sub}\",\"toPartnerId\":\"silk-ru\",\"lang\":\"ru\"}},\"id\":\"{Guid.NewGuid()}\"}}";
 
         Log.Debug($"Sending first payload: {payload}");
         await SendMessage(clientWebSocket, payload);
@@ -487,14 +430,12 @@ internal static class RuSroAuthService
 
             using (JsonDocument document = JsonDocument.Parse(response))
             {
-                if (
-                    document.RootElement.TryGetProperty("notification", out var notification)
-                    && notification.GetString() == "invalidate"
-                    && document.RootElement.TryGetProperty("params", out var paramsElement)
-                    && paramsElement
-                        .EnumerateArray()
-                        .Any(p => p.TryGetProperty("type", out var type) && type.GetString() == "webshopOwnPromoCodes")
-                )
+                if (document.RootElement.TryGetProperty("notification", out var notification) &&
+                    notification.GetString() == "invalidate" &&
+                    document.RootElement.TryGetProperty("params", out var paramsElement) &&
+                    paramsElement.EnumerateArray().Any(p =>
+                        p.TryGetProperty("type", out var type) &&
+                        type.GetString() == "webshopOwnPromoCodes"))
                 {
                     //string getWebshopOwnPromoCodesPayload = $"{{\"jsonrpc\":\"2.0\",\"method\":\"getWebshopOwnPromoCodes\",\"params\":{{ \"userId\":{sub},\"from\":0,\"count\":20,\"lang\":\"ru\"}},\"id\":\"{Guid.NewGuid()}\"}}";
                     //Log.Debug($"Some promocodes has experied. Sending promocodes update request: {getWebshopOwnPromoCodesPayload}");
@@ -505,45 +446,27 @@ internal static class RuSroAuthService
                     continue;
                 }
 
-                if (
-                    document.RootElement.TryGetProperty("notification", out notification)
-                    && notification.GetString() == "invalidate"
-                    && document.RootElement.TryGetProperty("params", out paramsElement)
-                    && paramsElement
-                        .EnumerateArray()
-                        .Any(p => p.TryGetProperty("type", out var type) && type.GetString() == "serviceStatusChanged")
-                )
-                {
-                    Log.Notify($"4game service status changed: {response}");
-                    continue;
-                }
-
-                if (
-                    document.RootElement.TryGetProperty("notification", out notification)
-                    && notification.GetString() == "invalidate"
-                    && document.RootElement.TryGetProperty("params", out paramsElement)
-                    && paramsElement
-                        .EnumerateArray()
-                        .Any(p => p.TryGetProperty("type", out var type) && type.GetString() == "pushNotification")
-                )
+                if (document.RootElement.TryGetProperty("notification", out notification) &&
+                    notification.GetString() == "invalidate" &&
+                    document.RootElement.TryGetProperty("params", out paramsElement) &&
+                    paramsElement.EnumerateArray().Any(p =>
+                        p.TryGetProperty("type", out var type) &&
+                        type.GetString() == "pushNotification"))
                 {
                     Log.Notify($"4game pushed notification: {response}");
                     continue;
                 }
 
-                if (
-                    document.RootElement.TryGetProperty("error", out JsonElement error)
-                    && error.TryGetProperty("code", out JsonElement errorCode)
-                    && errorCode.GetString() == "license.agreement.not.accepted"
-                )
+                if (document.RootElement.TryGetProperty("error", out JsonElement error) &&
+                    error.TryGetProperty("code", out JsonElement errorCode) &&
+                    errorCode.GetString() == "license.agreement.not.accepted")
                 {
                     Log.Debug("License agreement not accepted, attempting to accept it...");
 
                     var errorData = error.GetProperty("data");
                     int licenseAgreementId = errorData.GetProperty("licenseAgreementId").GetInt32();
 
-                    string acceptLicensePayload =
-                        $"{{\"jsonrpc\":\"2.0\",\"method\":\"acceptLicense\",\"params\":{{\"userId\":{sub},\"licenseAgreementId\":{licenseAgreementId},\"lang\":\"ru\"}},\"id\":\"{Guid.NewGuid()}\"}}";
+                    string acceptLicensePayload = $"{{\"jsonrpc\":\"2.0\",\"method\":\"acceptLicense\",\"params\":{{\"userId\":{sub},\"licenseAgreementId\":{licenseAgreementId},\"lang\":\"ru\"}},\"id\":\"{Guid.NewGuid()}\"}}";
 
                     Log.Debug($"Sending acceptLicense payload: {acceptLicensePayload}");
                     await SendMessage(clientWebSocket, acceptLicensePayload);
@@ -553,10 +476,7 @@ internal static class RuSroAuthService
 
                     using (JsonDocument acceptDocument = JsonDocument.Parse(acceptResponse))
                     {
-                        if (
-                            acceptDocument.RootElement.TryGetProperty("result", out JsonElement result)
-                            && result.ValueKind == JsonValueKind.Object
-                        )
+                        if (acceptDocument.RootElement.TryGetProperty("result", out JsonElement result) && result.ValueKind == JsonValueKind.Object)
                         {
                             Log.Debug("License agreement accepted, retrying createGameTokenCode...");
                             await SendMessage(clientWebSocket, payload);
@@ -587,12 +507,8 @@ internal static class RuSroAuthService
     private static async Task SendMessage(ClientWebSocket clientWebSocket, string message)
     {
         var messageBytes = Encoding.UTF8.GetBytes(message);
-        await clientWebSocket.SendAsync(
-            new ArraySegment<byte>(messageBytes),
-            WebSocketMessageType.Text,
-            true,
-            CancellationToken.None
-        );
+        await clientWebSocket.SendAsync(new ArraySegment<byte>(messageBytes), WebSocketMessageType.Text, true,
+            CancellationToken.None);
     }
 
     private static async Task<string> ReceiveMessage(ClientWebSocket clientWebSocket)

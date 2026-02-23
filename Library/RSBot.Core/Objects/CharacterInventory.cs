@@ -13,30 +13,16 @@ public class CharacterInventory : InventoryItemCollection
     /// <summary>
     ///     Minimum slot of NormalPart.
     /// </summary>
-    public static byte NORMAL_PART_MIN_SLOT
-    {
-        get
-        {
-            return (
-                Game.ClientType == GameClientType.Global
-                || Game.ClientType == GameClientType.Korean
-                || Game.ClientType == GameClientType.VTC_Game
-                || Game.ClientType == GameClientType.RuSro
-                || Game.ClientType == GameClientType.Turkey
-                || Game.ClientType == GameClientType.Taiwan
-                || Game.ClientType == GameClientType.Japanese
-            )
-                ? (byte)17 //4 slots for relics
-                : (byte)13;
-        }
-    }
+    public const byte NORMAL_PART_MIN_SLOT = 13;
 
     /// <summary>
     ///     The constructor.
     /// </summary>
     /// <param name="size">The size.</param>
     public CharacterInventory(Packet packet)
-        : base(packet) { }
+        : base(packet)
+    {
+    }
 
     /// <summary>
     ///     Gets the size of NormalPart.
@@ -58,11 +44,6 @@ public class CharacterInventory : InventoryItemCollection
     ///     <c>true</c> if this instance is sorting; otherwise, <c>false</c>.
     /// </value>
     public bool IsSorting { get; private set; }
-
-    /// <summary>
-    ///     Gets the number of free slots in NormalPart inventory.
-    /// </summary>
-    public new byte FreeSlots => (byte)(NormalPartSize - GetNormalPartItems().Count);
 
     /// <summary>
     ///     Gets the first free slot number inside NormalPart.
@@ -136,26 +117,23 @@ public class CharacterInventory : InventoryItemCollection
         packet.WriteByte(destinationSlot);
         packet.WriteUShort(amount);
 
-        var asyncResult = new AwaitCallback(
-            response =>
+        var asyncResult = new AwaitCallback(response =>
+        {
+            var result = response.ReadByte();
+            if (result == 0x01)
             {
-                var result = response.ReadByte();
-                if (result == 0x01)
-                {
-                    var operation = response.ReadByte();
-                    if (operation != 0)
-                        return AwaitCallbackResult.ConditionFailed;
+                var operation = response.ReadByte();
+                if (operation != 0)
+                    return AwaitCallbackResult.ConditionFailed;
 
-                    var source = response.ReadByte();
-                    var destination = response.ReadByte();
-                    if (source == sourceSlot && destination == destinationSlot)
-                        return AwaitCallbackResult.Success;
-                }
+                var source = response.ReadByte();
+                var destination = response.ReadByte();
+                if (source == sourceSlot && destination == destinationSlot)
+                    return AwaitCallbackResult.Success;
+            }
 
-                return AwaitCallbackResult.Fail;
-            },
-            0xB034
-        );
+            return AwaitCallbackResult.Fail;
+        }, 0xB034);
 
         PacketManager.SendPacket(packet, PacketDestination.Server, asyncResult);
         asyncResult.AwaitResponse(500);
@@ -178,32 +156,21 @@ public class CharacterInventory : InventoryItemCollection
         //Ignore items which move operations failed in the next iteration
         var blacklistedItems = new List<uint>(4);
 
-        int firstSlot = 13;
-        if (Game.ClientType == GameClientType.Global
-            || Game.ClientType == GameClientType.Korean
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.RuSro
-            || Game.ClientType == GameClientType.Turkey
-            || Game.ClientType == GameClientType.Taiwan
-            || Game.ClientType == GameClientType.Japanese)
-            firstSlot = 17; //4 slots for relics
-
         for (var iIteration = 0; iIteration < maxIterations; iIteration++)
         {
             iterations++;
 
             var itemsToStackGroups = this.Where(i =>
-                    i.Slot >= firstSlot
-                    && i.Record.IsStackable
-                    && i.Record.MaxStack > i.Amount
-                    && !blacklistedItems.Contains(i.ItemId)
-                )
+                    i.Slot > 12 && i.Record.IsStackable && i.Record.MaxStack > i.Amount &&
+                    !blacklistedItems.Contains(i.ItemId))
                 .GroupBy(i => i.ItemId);
 
             if (!itemsToStackGroups.Any())
                 break;
 
-            var itemsToStack = itemsToStackGroups.FirstOrDefault(g => g.Count() >= 2)?.OrderBy(i => i.Slot).ToList();
+            var itemsToStack = itemsToStackGroups.FirstOrDefault(g => g.Count() >= 2)
+                ?.OrderBy(i => i.Slot)
+                .ToList();
 
             if (itemsToStack == null)
                 break;

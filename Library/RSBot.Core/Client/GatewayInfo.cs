@@ -1,4 +1,6 @@
-﻿using RSBot.Core.Event;
+﻿using System;
+using RSBot.Core.Event;
+using RSBot.Core.Extensions;
 
 namespace RSBot.Core.Client;
 
@@ -36,11 +38,11 @@ public class GatewayInfo
             Log.Error("Could not load the GATEPORT.txt file, because the data doesn't contain port information");
             return result;
         }
-
+        
         result.Port = port;
 
         EventManager.FireEvent("OnLoadGateport", result);
-
+        
         return result;
     }
 }

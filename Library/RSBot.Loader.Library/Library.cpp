@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <string>
+#include <map>
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -20,7 +21,6 @@ HANDLE g_Thread = NULL;
 BYTE g_IsDebug;
 string g_RedirectIP = "127.0.0.1";
 WORD g_RedirectPort = 1500;
-bool g_Activated = false;
 
 vector<string> g_RealGatewayAddresses;
 WORD g_RealGatewayPort = 15779;
@@ -93,15 +93,6 @@ HANDLE WINAPI User_CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 		_snwprintf_s(newName, sizeof(newName), sizeof(newName) / sizeof(newName[0]) - 1, L"Global\\Silkroad Client_%lld", 0xFFFFFFFF & __rdtsc());
 		return Real_CreateSemaphoreW(lpSemaphoreAttributes, lInitialCount, lMaximumCount, newName);
 	}
-
-	if (lpName && wcscmp(lpName, L"Global\\Silkroad Client TR") == 0)
-	{
-		wchar_t newName[128] = { 0 };
-
-		_snwprintf_s(newName, sizeof(newName), sizeof(newName) / sizeof(newName[0]) - 1, L"Global\\Silkroad Client TR_%lld", 0xFFFFFFFF & __rdtsc());
-		return Real_CreateSemaphoreW(lpSemaphoreAttributes, lInitialCount, lMaximumCount, newName);
-	}
-
 	return Real_CreateSemaphoreW(lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName);
 }
 
@@ -137,9 +128,6 @@ int WINAPI Detour_connect(SOCKET s, const struct sockaddr* name, int len)
 
 	for (auto& gatewayAddress : g_RealGatewayAddresses)
 	{
-		struct hostent* remoteHost = gethostbyname(gatewayAddress.c_str());
-		if (remoteHost == NULL || remoteHost->h_addr_list[0] == NULL) continue;
-
 		struct in_addr maddr = { 0 };
 		maddr.s_addr = *(u_long*)gethostbyname(gatewayAddress.c_str())->h_addr_list[0];
 		if (strcmp(inet_ntoa(editing->sin_addr), inet_ntoa(maddr)) == 0 && htons(editing->sin_port) == g_RealGatewayPort)
@@ -160,6 +148,9 @@ void Install()
 {
 	WSADATA wsaData = { 0 };
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+	User_CreateMutexA(0, 0, "Silkroad Online Launcher");
+	User_CreateMutexA(0, 0, "Ready");
 
 	DetourRestoreAfterWith();
 	DetourTransactionBegin();
@@ -196,58 +187,55 @@ void LoadConfig()
 {
 	char* tempFolder = NULL;
 	_dupenv_s(&tempFolder, NULL, "TMP");
-	if (!tempFolder) return;
 
 	stringstream payloadPath;
 	payloadPath << tempFolder << "\\RSBot_" << GetCurrentProcessId() << ".tmp";
 
-	for (int i = 0; i < 30; i++) {
-		ifstream stream(payloadPath.str(), ifstream::binary);
-		if (stream.is_open()) {
-			g_Activated = true;
-			PayloadRead(stream, g_IsDebug);
-			PayloadReadString(stream, g_RedirectIP);
-			PayloadRead(stream, g_RedirectPort);
+	ifstream stream(payloadPath.str(), ifstream::binary);
 
-			DWORD nRealGatewayAddressCount = 0;
-			PayloadRead(stream, nRealGatewayAddressCount);
-			for (size_t j = 0; j < nRealGatewayAddressCount; j++)
-			{
-				string address;
-				PayloadReadString(stream, address);
-				g_RealGatewayAddresses.push_back(address);
-			}
-			PayloadRead(stream, g_RealGatewayPort);
+	PayloadRead(stream, g_IsDebug);
+	PayloadReadString(stream, g_RedirectIP);
+	PayloadRead(stream, g_RedirectPort);
 
-			stream.close();
-			DeleteFileA(payloadPath.str().c_str());
-			return;
-		}
-		Sleep(100);
-	}
-}
+	DWORD nRealGatewayAddressCount = 0;
+	PayloadRead(stream, nRealGatewayAddressCount);
+	for (size_t i = 0; i < nRealGatewayAddressCount; i++)
+	{
+		string address;
+		PayloadReadString(stream, address);
 
-DWORD WINAPI Initialize(LPVOID lpParam) {
-	LoadConfig();
-
-	if (!g_Activated) {
-		return 0;
+		g_RealGatewayAddresses.push_back(address);
 	}
 
-	if (g_IsDebug) {
-		AllocConsole();
-		freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-	}
+	PayloadRead(stream, g_RealGatewayPort);
 
-	Install();
-	return 0;
+	stream.close();
+	DeleteFileA(payloadPath.str().c_str());
 }
 
 extern "C" _declspec(dllexport) BOOL APIENTRY DllMain(HMODULE hModule, DWORD ulReason, LPVOID lpReserved)
 {
-	if (ulReason == DLL_PROCESS_ATTACH) {
-		DisableThreadLibraryCalls(hModule);
-		CloseHandle(CreateThread(NULL, 0, Initialize, NULL, 0, NULL));
+	if (DetourIsHelperProcess())
+	{
+		return true;
+	}
+
+	if (ulReason == DLL_PROCESS_ATTACH)
+	{
+		LoadConfig();
+		if (g_IsDebug)
+		{
+			AllocConsole();
+			freopen("CONOUT$", "w", stdout);
+			freopen("CONIN$", "r", stdin);
+		}
+
+		Install();
+
+	}
+	else if (ulReason == DLL_PROCESS_DETACH)
+	{
+		Uninstall();
 	}
 	return TRUE;
 }

@@ -54,13 +54,10 @@ internal class AttackBundle
             EventManager.FireEvent("Bundle.Buff.Invoke");
 
         var target = Game.SelectedEntity;
-        if (
-            target is { IsMob: true, State.LifeState: LifeState.Alive }
-            || (
-                target is SpawnedPlayer { WearsJobSuite: true, Job: JobType.Thief, State.LifeState: LifeState.Alive }
-                && TradeConfig.AttackThiefPlayers
-            )
-        )
+        if (target is { IsMob: true, State.LifeState: LifeState.Alive } || (target is SpawnedPlayer
+            {
+                WearsJobSuite: true, Job: JobType.Thief, State.LifeState: LifeState.Alive
+            } && TradeConfig.AttackThiefPlayers))
         {
             IsAttacking = true;
 
@@ -89,25 +86,18 @@ internal class AttackBundle
 
         var target = Game.SelectedEntity;
 
-        if (
-            target != null
-            && (
-                target.IsMob
-                || (
-                    target
-                        is SpawnedPlayer { WearsJobSuite: true, Job: JobType.Thief, State.LifeState: LifeState.Alive }
-                    && TradeConfig.AttackThiefPlayers
-                )
-            )
-        )
+        if (target != null && (target.IsMob || (target is SpawnedPlayer
+            {
+                WearsJobSuite: true, Job: JobType.Thief, State.LifeState: LifeState.Alive
+            } && TradeConfig.AttackThiefPlayers)))
             return true;
 
         //Priority 1: Protect transport?
-        if (TradeConfig.ProtectTransport && Game.Player.JobTransport != null)
+        if (TradeConfig.ProtectTransport
+            && Game.Player.JobTransport != null)
             if (SpawnManager.TryGetEntity<SpawnedBionic>(Game.Player.JobTransport.UniqueId, out var bionic))
             {
-                var attacker = bionic
-                    .GetAttackers()
+                var attacker = bionic.GetAttackers()
                     .FirstOrDefault(a => a.IsBehindObstacle == false && a.State.LifeState == LifeState.Alive);
 
                 if (attacker != null)
@@ -117,8 +107,7 @@ internal class AttackBundle
         //Priority 2: Fight back
         if (TradeConfig.CounterAttack)
         {
-            var attacker = Game
-                .Player.GetAttackers()
+            var attacker = Game.Player.GetAttackers()
                 .FirstOrDefault(a => a.IsBehindObstacle == false && a.State.LifeState == LifeState.Alive);
 
             if (attacker != null)
@@ -127,27 +116,18 @@ internal class AttackBundle
 
         //Priority 4: Thief players
         if (TradeConfig.AttackThiefPlayers)
-            if (
-                SpawnManager.TryGetEntity<SpawnedPlayer>(
-                    p =>
-                        p.WearsJobSuite
-                        && p.Job == JobType.Thief
-                        && !p.IsBehindObstacle
-                        && p.State.LifeState == LifeState.Alive,
-                    out var nearbyThiefPlayer
-                )
-            )
+            if (SpawnManager.TryGetEntity<SpawnedPlayer>(
+                    p => p.WearsJobSuite && p.Job == JobType.Thief && !p.IsBehindObstacle &&
+                         p.State.LifeState == LifeState.Alive,
+                    out var nearbyThiefPlayer))
                 return nearbyThiefPlayer.TrySelect();
 
         //Priority 3: Thief NPCs
         if (TradeConfig.AttackThiefNpcs)
-            if (
-                SpawnManager.TryGetEntity<SpawnedMonster>(
-                    m =>
-                        m.IsMob && m.Record.TypeID4 == 2 && !m.IsBehindObstacle && m.State.LifeState == LifeState.Alive,
-                    out var thiefMob
-                )
-            )
+            if (SpawnManager.TryGetEntity<SpawnedMonster>(
+                    m => m.IsMob && m.Record.TypeID4 == 2 && !m.IsBehindObstacle &&
+                         m.State.LifeState == LifeState.Alive,
+                    out var thiefMob))
                 return thiefMob.TrySelect();
 
         return false;

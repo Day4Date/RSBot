@@ -9,12 +9,12 @@ using RSBot.Alchemy.Helper;
 using RSBot.Core;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
-using SDUI.Controls;
+
 
 namespace RSBot.Alchemy.Views.Settings;
 
 [ToolboxItem(false)]
-public partial class AttributesSettingsView : DoubleBufferedControl
+public partial class AttributesSettingsView : UserControl
 {
     private List<AttributeInfoPanel> _attributePanels;
 
@@ -41,14 +41,11 @@ public partial class AttributesSettingsView : DoubleBufferedControl
                     continue;
 
                 if (attributePanel.Stones != null && attributePanel.Stones.Any())
-                    attributes.Add(
-                        new AttributeBundleConfig.AttributeBundleConfigItem
-                        {
-                            Group = attributePanel.AttributeGroup,
-                            MaxValue = attributePanel.MaxValue,
-                            Stone = attributePanel.Stones.First(),
-                        }
-                    );
+                    attributes.Add(new AttributeBundleConfig.AttributeBundleConfigItem
+                    {
+                        Group = attributePanel.AttributeGroup, MaxValue = attributePanel.MaxValue,
+                        Stone = attributePanel.Stones.First()
+                    });
             }
 
             result.Attributes = attributes;
@@ -86,8 +83,7 @@ public partial class AttributesSettingsView : DoubleBufferedControl
             if (availableItemAttributes == null)
             {
                 Log.Error(
-                    $"[Alchemy] Could not identify the selected item's attribute information. [ItemId = {selectedItem.ItemId}]"
-                );
+                    $"[Alchemy] Could not identify the selected item's attribute information. [ItemId = {selectedItem.ItemId}]");
 
                 return;
             }
@@ -99,19 +95,11 @@ public partial class AttributesSettingsView : DoubleBufferedControl
             {
                 var matchingStones = AlchemyItemHelper.GetAttributeStones(selectedItem, attributeGroup);
 
-                var config = Globals.Botbase.AttributeBundleConfig.Attributes.FirstOrDefault(x =>
-                    x.Group == attributeGroup
-                );
+                var config =
+                    Globals.Botbase.AttributeBundleConfig.Attributes.FirstOrDefault(x => x.Group == attributeGroup);
 
-                var panel = new AttributeInfoPanel(
-                    attributeGroup,
-                    matchingStones,
-                    selectedItem,
-                    config == null ? 0 : config.MaxValue
-                )
-                {
-                    Dock = DockStyle.Top,
-                };
+                var panel = new AttributeInfoPanel(attributeGroup, matchingStones, selectedItem,
+                    config == null ? 0 : config.MaxValue) { Dock = DockStyle.Top };
                 _attributePanels.Add(panel);
 
                 if (config == null || !matchingStones.Any())
@@ -125,13 +113,10 @@ public partial class AttributesSettingsView : DoubleBufferedControl
                 panel.OnChange += PanelOnChange;
             }
 
-            BeginInvoke(() =>
-            {
-                Hide();
-                Controls.Clear();
-                Controls.AddRange(_attributePanels.ToArray());
-                Show();
-            });
+            Hide();
+            Controls.Clear();
+            Controls.AddRange(_attributePanels.ToArray());
+            Show();
 
             Globals.Botbase.AttributeBundleConfig = BundleConfig;
         }

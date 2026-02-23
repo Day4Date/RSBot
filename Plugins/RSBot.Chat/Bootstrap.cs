@@ -1,68 +1,57 @@
-﻿using System.Windows.Forms;
+using Avalonia.Controls;
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Plugins;
 
 namespace RSBot.Chat;
 
+/// <summary>
+/// Bootstrap class for the chat plugin
+/// </summary>
 public class Bootstrap : IPlugin
 {
-    /// <inheritdoc />
-    public string Author => "RSBot Team";
+    /// <summary>
+    /// Gets the internal name of the plugin
+    /// </summary>
+    public string InternalName => "RSBot.Chat";
 
-    /// <inheritdoc />
-    public string Description => "Chat plugin for RSBot.";
+    /// <summary>
+    /// Gets the display name of the plugin
+    /// </summary>
+    public string DisplayName => "Chat";
 
-    /// <inheritdoc />
-    public string Name => "RSBot.Chat";
-
-    /// <inheritdoc />
-    public string Title => "Chat";
-
-    /// <inheritdoc />
-    public string Version => "1.0.0";
-
-    /// <inheritdoc />
-    public bool Enabled { get; set; }
-
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a value indicating whether the plugin should be displayed as a tab
+    /// </summary>
     public bool DisplayAsTab => true;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the display order of the plugin
+    /// </summary>
     public int Index => 98;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a value indicating whether the plugin requires the game to be running
+    /// </summary>
     public bool RequireIngame => true;
 
-    /// <inheritdoc />
-    public void Initialize() { }
-
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the main view of the plugin
+    /// </summary>
     public Control View => Views.View.Instance;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Initializes the plugin
+    /// </summary>
+    public void Initialize()
+    {
+    }
+
+    /// <summary>
+    /// Translates the plugin's UI elements
+    /// </summary>
     public void Translate()
     {
         LanguageManager.Translate(View, Kernel.Language);
     }
-
-    /// <inheritdoc />
-    public void OnLoadCharacter()
-    {
-        // do nothing
-    }
-
-    /// <inheritdoc />
-    public void Enable()
-    {
-        if (View != null)
-            View.Enabled = true;
-    }
-
-    /// <inheritdoc />
-    public void Disable()
-    {
-        if (View != null)
-            View.Enabled = false;
-    }
-}
+} 

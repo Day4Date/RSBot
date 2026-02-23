@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
-using System.Numerics;
-using RSBot.NavMeshApi.Cells;
+﻿using RSBot.NavMeshApi.Cells;
 using RSBot.NavMeshApi.Edges;
 using RSBot.NavMeshApi.Extensions;
 using RSBot.NavMeshApi.Mathematics;
 using RSBot.NavMeshApi.Terrain;
+
+using System.Diagnostics;
+using System.Numerics;
 
 namespace RSBot.NavMeshApi.Object;
 
@@ -62,7 +63,7 @@ public class NavMeshObj : NavMesh
                 SkinedNavMeshOffset = reader.ReadInt32(),
                 Offset9 = reader.ReadInt32(),
                 Int1 = reader.ReadInt32(),
-                StructOption = (NavMeshStructOption)reader.ReadInt32(),
+                StructOption = (NavMeshStructOption)reader.ReadInt32()
             };
 
             stream.Seek(4, SeekOrigin.Current); // SubPrimCount
@@ -145,9 +146,7 @@ public class NavMeshObj : NavMesh
                 var edge = new NavMeshEdgeGlobal(this, i)
                 {
                     Line = new LineF(v0.Position, v1.Position),
-                    Normal = Vector3.Normalize(
-                        new Vector3(v1.Position.Z - v0.Position.Z, 0.0f, v0.Position.X - v1.Position.X)
-                    ),
+                    Normal = Vector3.Normalize(new Vector3(v1.Position.Z - v0.Position.Z, 0.0f, v0.Position.X - v1.Position.X)),
                     SrcCellIndex = reader.ReadInt16(),
                     DstCellIndex = reader.ReadInt16(),
                     SrcSide = NavMeshCellSide.Invalid,
@@ -160,24 +159,17 @@ public class NavMeshObj : NavMesh
                 };
 
                 //Debug.Assert((edge.Flag & NavMeshEdgeFlag.Entrance) == 0, $"Bit5 found in {nameof(NavMeshEdgeGlobal)} #{edge.Index} Obj:{this.Name}");
-                Debug.Assert(
-                    (edge.Flag & NavMeshEdgeFlag.Bit6) == 0,
-                    $"Bit6 found in {nameof(NavMeshEdgeGlobal)} #{edge.Index} Obj:{this.Name}"
-                );
+                Debug.Assert((edge.Flag & NavMeshEdgeFlag.Bit6) == 0, $"Bit6 found in {nameof(NavMeshEdgeGlobal)} #{edge.Index} Obj:{this.Name}");
 
                 if ((this.StructOption & NavMeshStructOption.Edge) != 0)
                     edge.EventZone = (NavMeshEventZone)reader.ReadByte();
 
                 // We found a railing edges, mark the object!
-                if ( /*!this.HasRailing &&*/
-                    edge.IsRailing
-                )
+                if (/*!this.HasRailing &&*/ edge.IsRailing)
                     this.HasRailing = true;
 
                 // We found an entrance edges, mark the object!
-                if ( /*!this.HasEntrance &&*/
-                    (edge.Flag & NavMeshEdgeFlag.Blocked) == 0
-                )
+                if (/*!this.HasEntrance &&*/ (edge.Flag & NavMeshEdgeFlag.Blocked) == 0)
                     this.HasEntrance = true;
 
                 edge.Link();
@@ -215,10 +207,7 @@ public class NavMeshObj : NavMesh
                     Flag = (NavMeshEdgeFlag)reader.ReadByte() | NavMeshEdgeFlag.Internal,
                 };
                 //Debug.Assert((edge.Flag & NavMeshEdgeFlag.Entrance) == 0, $"Bit5 found in {nameof(NavMeshEdgeInternal)} #{edge.Index} Obj:{this.Name}");
-                Debug.Assert(
-                    (edge.Flag & NavMeshEdgeFlag.Bit6) == 0,
-                    $"Bit6 found in {nameof(NavMeshEdgeInternal)} #{edge.Index} Obj:{this.Name}"
-                );
+                Debug.Assert((edge.Flag & NavMeshEdgeFlag.Bit6) == 0, $"Bit6 found in {nameof(NavMeshEdgeInternal)} #{edge.Index} Obj:{this.Name}");
 
                 if ((this.StructOption & NavMeshStructOption.Edge) != 0)
                     edge.EventZone = (NavMeshEventZone)reader.ReadByte();
@@ -285,12 +274,8 @@ public class NavMeshObj : NavMesh
         return this.Cells[index];
     }
 
-    public override NavMeshRaycastResult Raycast(
-        NavMeshTransform src,
-        NavMeshTransform dst,
-        NavMeshRaycastType rayType,
-        out NavMeshRaycastHit hit
-    )
+
+    public override NavMeshRaycastResult Raycast(NavMeshTransform src, NavMeshTransform dst, NavMeshRaycastType rayType, out NavMeshRaycastHit hit)
     {
         var curCell = (NavMeshCellTri)src.Cell;
         var prevCell = curCell;
@@ -302,7 +287,7 @@ public class NavMeshObj : NavMesh
         while (true)
         {
             //if (raycastCount++ > 100)
-            //throw new Exception("raycastCount (obj) above 100");
+               //throw new Exception("raycastCount (obj) above 100");
 
             if (curCell == dst.Cell)
             {
@@ -361,14 +346,9 @@ public class NavMeshObj : NavMesh
 
             // Check if we hit an edge with an EventZone
             var eventZone = intersectionEdge.EventZone;
-            if (
-                (eventZone.Flag & NavMeshEventZoneFlag.All) != 0
-                && (!(NavMeshManager.EventZoneHandler?.Invoke(instance, eventZone) ?? false))
-            )
+            if ((eventZone.Flag & NavMeshEventZoneFlag.All) != 0 && (!(NavMeshManager.EventZoneHandler?.Invoke(instance, eventZone) ?? false)))
             {
-                Debug.WriteLine(
-                    $"EventZone ({instance.NavMeshObj.Events[eventZone.Index]}, {eventZone.Flag}) returned collision."
-                );
+                Debug.WriteLine($"EventZone ({instance.NavMeshObj.Events[eventZone.Index]}, {eventZone.Flag}) returned collision.");
                 hit = new NavMeshRaycastHit
                 {
                     Cell = curCell,
@@ -384,14 +364,9 @@ public class NavMeshObj : NavMesh
             {
                 // Check if remoteCell has an EventZone
                 eventZone = remoteCell.EventZone;
-                if (
-                    (eventZone.Flag & NavMeshEventZoneFlag.All) != 0
-                    && (!(NavMeshManager.EventZoneHandler?.Invoke(instance, eventZone) ?? false))
-                )
+                if ((eventZone.Flag & NavMeshEventZoneFlag.All) != 0 && (!(NavMeshManager.EventZoneHandler?.Invoke(instance, eventZone) ?? false)))
                 {
-                    Debug.WriteLine(
-                        $"EventZone ({instance.NavMeshObj.Events[eventZone.Index]}, {eventZone.Flag}) returned collision."
-                    );
+                    Debug.WriteLine($"EventZone ({instance.NavMeshObj.Events[eventZone.Index]}, {eventZone.Flag}) returned collision.");
                     hit = new NavMeshRaycastHit
                     {
                         Cell = curCell,
@@ -403,6 +378,7 @@ public class NavMeshObj : NavMesh
                     return NavMeshRaycastResult.Collision;
                 }
             }
+
 
             // If remoteCell is NULL we've hit an outline edge
             if (remoteCell == null)

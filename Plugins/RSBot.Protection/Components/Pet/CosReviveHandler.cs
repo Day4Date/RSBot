@@ -47,8 +47,6 @@ public class CosReviveHandler
         if (item.State != InventoryItemState.Dead)
             return;
 
-        System.Threading.Thread.Sleep(5000);
-
         if (itemRecord.IsGrowthPet)
             Game.Player.ReviveGrowth();
 

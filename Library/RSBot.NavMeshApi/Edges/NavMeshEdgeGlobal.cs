@@ -10,8 +10,9 @@ public class NavMeshEdgeGlobal : NavMeshEdge
     public NavMesh SrcMesh { get; set; }
     public NavMesh DstMesh { get; set; }
 
-    public NavMeshEdgeGlobal(NavMesh mesh, int index)
-        : base(mesh, index) { }
+    public NavMeshEdgeGlobal(NavMesh mesh, int index) : base(mesh, index)
+    {
+    }
 
     public override void Read(NavMeshReader reader)
     {

@@ -1,6 +1,5 @@
 using System.Linq;
 using RSBot.Core;
-using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Network;
 using RSBot.General.Components;
@@ -52,7 +51,7 @@ internal class CharacterListing : IPacketHandler
 
             var name = packet.ReadString();
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (Game.ClientType > GameClientType.Chinese)
                 packet.ReadString(); // what is this?
 
             packet.ReadByte(); //Scale
@@ -62,13 +61,13 @@ internal class CharacterListing : IPacketHandler
             packet.ReadUShort(); //Intelligence
             packet.ReadUShort(); //Stat point(s)
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (Game.ClientType >= GameClientType.Chinese)
                 packet.ReadInt(); // skill point
 
             packet.ReadInt(); //Health
             packet.ReadInt(); //Mana
 
-            if (Game.ClientType >= GameClientType.Chinese_Old)
+            if (Game.ClientType >= GameClientType.Chinese)
                 packet.ReadUShort(); // Region
 
             //Check if the character is being deleted
@@ -76,7 +75,7 @@ internal class CharacterListing : IPacketHandler
             if (characterDeletionFlag)
                 packet.ReadInt(); //Time till deletion
 
-            if (Game.ClientType >= GameClientType.Chinese)
+            if (Game.ClientType > GameClientType.Chinese)
                 packet.ReadUInt(); // last logged out timestamp
 
             packet.ReadByte(); //Has guild?
@@ -120,17 +119,8 @@ internal class CharacterListing : IPacketHandler
 
         EventManager.FireEvent("OnCharacterListReceived");
 
-        if (
-            !string.IsNullOrWhiteSpace(ProfileManager.SelectedCharacter)
-            && lobbyCharacters.Any(p => p.name == ProfileManager.SelectedCharacter)
-        )
-        {
-            selectedAccount.SelectedCharacter = ProfileManager.SelectedCharacter;
-        }
-        else if (
-            string.IsNullOrWhiteSpace(selectedAccount.SelectedCharacter)
-            || !lobbyCharacters.Any(p => p.name == selectedAccount.SelectedCharacter)
-        )
+        if (string.IsNullOrWhiteSpace(selectedAccount.SelectedCharacter) ||
+            !lobbyCharacters.Any(p => p.name == selectedAccount.SelectedCharacter))
         {
             if (charCount == 0)
             {

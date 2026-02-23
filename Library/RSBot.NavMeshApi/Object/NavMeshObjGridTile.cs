@@ -32,12 +32,7 @@ public class NavMeshObjGridTile
     {
         _grid = grid;
         this.Index = index;
-        this.Rectangle = new RectangleF(
-            _grid.Origin.X + (this.X * Width),
-            _grid.Origin.Y + (this.Y * Height),
-            Width,
-            Height
-        );
+        this.Rectangle = new RectangleF(_grid.Origin.X + (this.X * Width), _grid.Origin.Y + (this.Y * Height), Width, Height);
     }
 
     public bool AddGlobalEdge(NavMeshEdgeGlobal edge) => _globalEdges.Add(edge);

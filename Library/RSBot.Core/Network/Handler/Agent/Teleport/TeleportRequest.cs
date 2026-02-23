@@ -32,7 +32,8 @@ internal class TeleportRequest : IPacketHandler
     {
         var teleporterUniqueId = packet.ReadUInt();
         var teleportType = (TeleportType)packet.ReadByte();
-        if (teleportType == TeleportType.Guide || teleportType == TeleportType.RUNTIME_PORTAL)
+        if (teleportType == TeleportType.Guide ||
+            teleportType == TeleportType.RUNTIME_PORTAL)
         {
             var operation = packet.ReadByte();
             return;
@@ -45,7 +46,7 @@ internal class TeleportRequest : IPacketHandler
 
         Game.Player.Teleportation = new Teleportation
         {
-            Destination = Game.ReferenceManager.TeleportData.FirstOrDefault(t => t.ID == destination),
+            Destination = Game.ReferenceManager.TeleportData.FirstOrDefault(t => t.ID == destination)
         };
 
         EventManager.FireEvent("OnRequestTeleport", destination, portal.Record.CodeName);

@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
-using System.Numerics;
-using RSBot.NavMeshApi.Cells;
+﻿using RSBot.NavMeshApi.Cells;
 using RSBot.NavMeshApi.Edges;
 using RSBot.NavMeshApi.Extensions;
 using RSBot.NavMeshApi.Mathematics;
+
+using System.Diagnostics;
+using System.Numerics;
 
 namespace RSBot.NavMeshApi.Dungeon;
 
@@ -137,7 +138,7 @@ public class NavMeshDungeon : NavMesh
         {
             Width = reader.ReadInt32(),
             Height = reader.ReadInt32(),
-            Length = reader.ReadInt32(),
+            Length = reader.ReadInt32()
         };
 
         var voxelCount = reader.ReadInt32(); // voxles with data
@@ -222,13 +223,11 @@ public class NavMeshDungeon : NavMesh
 
             if ((blockObjFlag & 2) != 0)
             {
-                block.ObjectList.Add(
-                    new DungeonColObj
-                    {
-                        Name = blockObjName,
-                        Circle = new CircleF(blockObjPosition.ToVector2(), blockObjRadius),
-                    }
-                );
+                block.ObjectList.Add(new DungeonColObj
+                {
+                    Name = blockObjName,
+                    Circle = new CircleF(blockObjPosition.ToVector2(), blockObjRadius),
+                });
             }
         }
 
@@ -342,12 +341,7 @@ public class NavMeshDungeon : NavMesh
         return false;
     }
 
-    public override NavMeshRaycastResult Raycast(
-        NavMeshTransform src,
-        NavMeshTransform dst,
-        NavMeshRaycastType type,
-        out NavMeshRaycastHit hit
-    )
+    public override NavMeshRaycastResult Raycast(NavMeshTransform src, NavMeshTransform dst, NavMeshRaycastType type, out NavMeshRaycastHit hit)
     {
         var line = new LineF(src.Offset, dst.Offset);
 

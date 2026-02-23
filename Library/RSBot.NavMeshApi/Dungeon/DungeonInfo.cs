@@ -1,5 +1,5 @@
-﻿using System.Text.RegularExpressions;
-using RSBot.NavMeshApi.Mathematics;
+﻿using RSBot.NavMeshApi.Mathematics;
+using System.Text.RegularExpressions;
 
 namespace RSBot.NavMeshApi.Dungeon;
 

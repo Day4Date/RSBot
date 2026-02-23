@@ -16,13 +16,11 @@ void PayloadReadString(ifstream& stream, string& dst)
 	int nLength;
 	PayloadRead(stream, nLength);
 
-	if (nLength > 0) 
-	{
-		dst.resize(nLength);
-		stream.read(&dst[0], nLength);
-	}
-	else
-		dst = "";
+	char* buffer = (char*)malloc(nLength);
+	stream.read(buffer, nLength);
+	buffer[nLength] = '\0';
+
+	dst = string(buffer);
 }
 
 template <typename T>

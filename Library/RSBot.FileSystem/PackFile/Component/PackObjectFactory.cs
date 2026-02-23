@@ -4,14 +4,14 @@ namespace RSBot.FileSystem.PackFile.Component;
 
 internal static class PackObjectFactory
 {
-    public static PackBlock GetEmptyBlock(
-        long blockPosition,
-        long parentBlockPosition = 0,
-        bool isFolder = false,
-        bool isRoot = false
-    )
+    public static PackBlock GetEmptyBlock(long blockPosition, long parentBlockPosition = 0, bool isFolder = false,
+        bool isRoot = false)
     {
-        var result = new PackBlock { Entries = new PackEntry[20], Position = blockPosition };
+        var result = new PackBlock
+        {
+            Entries = new PackEntry[20],
+            Position = blockPosition
+        };
 
         //In case of a folder Navigate up/down entries
         if (isFolder)
@@ -24,6 +24,7 @@ internal static class PackObjectFactory
             else
                 result.Entries[1] = GetDotDotFolder(parentBlockPosition);
         }
+
         //In case of a continuation of a block most likely
         else
         {
@@ -48,7 +49,7 @@ internal static class PackObjectFactory
             Name = string.Empty,
             NextBlock = 0,
             Payload = new byte[2],
-            Size = 0,
+            Size = 0
         };
     }
 
@@ -63,7 +64,7 @@ internal static class PackObjectFactory
             Name = ".",
             NextBlock = 0,
             Payload = new byte[2],
-            Size = 0,
+            Size = 0
         };
     }
 
@@ -78,7 +79,7 @@ internal static class PackObjectFactory
             Name = "..",
             NextBlock = 0,
             Payload = new byte[2],
-            Size = 0,
+            Size = 0
         };
     }
 }

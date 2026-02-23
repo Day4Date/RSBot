@@ -82,7 +82,79 @@ public class Action
     /// </value>
     public bool PlayerIsTarget => Game.Player.UniqueId == TargetId;
 
-    public void ReadPacket(Packet packet)
+    /// <summary>
+    ///     Deserialize the packet. 0xB070
+    /// </summary>
+    /// <param name="packet">The packet.</param>
+    /// <returns>Deserialized <see cref="Action" /></returns>
+    public static Action DeserializeBegin(Packet packet)
+    {
+        var actionCode = packet.ReadByte();
+
+        if (Game.ClientType > GameClientType.Thailand)
+            packet.ReadByte(); // always 0x30
+
+        var action = new Action
+        {
+            Code = actionCode,
+            SkillId = packet.ReadUInt(),
+            ExecutorId = packet.ReadUInt(),
+            Id = packet.ReadUInt()
+        };
+
+        if (Game.ClientType >= GameClientType.Global)
+            action.UnknownId = packet.ReadUInt();
+
+        action.TargetId = packet.ReadUInt();
+        if (Game.ClientType == GameClientType.Turkey ||
+            Game.ClientType == GameClientType.Global ||
+            Game.ClientType == GameClientType.VTC_Game ||
+            Game.ClientType == GameClientType.RuSro)
+        {
+            packet.ReadByte();
+            action.Flag = (ActionStateFlag)packet.ReadByte();
+        }
+        else if (Game.ClientType == GameClientType.Rigid)
+        {
+            action.Flag = (ActionStateFlag)packet.ReadByte();
+            var flag = packet.ReadByte();
+            Debug.WriteLine("Flag:" + flag);
+        }
+        else
+        {
+            action.Flag = (ActionStateFlag)packet.ReadByte();
+        }
+
+        /*if (Game.ClientType >= GameClientType.Global)
+            packet.ReadByte();
+
+        action.Flag = (ActionStateFlag)packet.ReadByte();*/
+        action.SerializeDetail(packet);
+
+        if (action.TargetId != 0)
+            EventManager.FireEvent("OnEntityHit", action.Id, action.ExecutorId, action.TargetId, 0, false);
+
+        return action;
+    }
+
+    /// <summary>
+    ///     Deserialize the packet. 0xB071
+    /// </summary>
+    /// <param name="packet">The packet.</param>
+    /// <returns>Deserialized <see cref="Action" /></returns>
+    public static Action DeserializeEnd(Packet packet)
+    {
+        var action = new Action();
+        action.Id = packet.ReadUInt(); //ActionId
+        action.TargetId = packet.ReadUInt(); //originalTargetId
+
+        action.Flag = (ActionStateFlag)packet.ReadByte();
+        action.SerializeDetail(packet);
+
+        return action;
+    }
+
+    public void SerializeDetail(Packet packet)
     {
         if (Flag.HasFlag(ActionStateFlag.Attack))
         {
@@ -112,10 +184,13 @@ public class Action
                     {
                         var critStatus = packet.ReadByte(); // 0x01: normal 0x02 critical
 
-                        var damage = BitConverter.ToInt32(
-                            new byte[] { packet.ReadByte(), packet.ReadByte(), packet.ReadByte(), 0 },
+                        var damage = BitConverter.ToInt32(new byte[]
+                        {
+                            packet.ReadByte(),
+                            packet.ReadByte(),
+                            packet.ReadByte(),
                             0
-                        );
+                        }, 0);
 
                         //if(entity.Health < damage)
                         //damage = entity.Health;
@@ -162,8 +237,7 @@ public class Action
     /// <summary>
     ///     Gets the executor.
     /// </summary>
-    public bool TryGetExecutor<T>(out T entity)
-        where T : SpawnedBionic
+    public bool TryGetExecutor<T>(out T entity) where T : SpawnedBionic
     {
         return SpawnManager.TryGetEntity(ExecutorId, out entity);
     }
@@ -172,8 +246,7 @@ public class Action
     ///     Gets the target.
     /// </summary>
     /// <returns></returns>
-    public bool TryGetTarget<T>(out T entity)
-        where T : SpawnedBionic
+    public bool TryGetTarget<T>(out T entity) where T : SpawnedBionic
     {
         return SpawnManager.TryGetEntity(TargetId, out entity);
     }

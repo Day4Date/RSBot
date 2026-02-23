@@ -5,9 +5,7 @@ using RSBot.NavMeshApi.Object;
 
 namespace RSBot.NavMeshApi.Edges;
 
-[System.Diagnostics.DebuggerDisplay(
-    "{Index} = {Flag} ({SrcCellIndex} [{SrcDirection}] -> {DstCellIndex} [{DstDirection}])"
-)]
+[System.Diagnostics.DebuggerDisplay("{Index} = {Flag} ({SrcCellIndex} [{SrcDirection}] -> {DstCellIndex} [{DstDirection}])")]
 public abstract class NavMeshEdge
 {
     public NavMesh NavMesh { get; set; }

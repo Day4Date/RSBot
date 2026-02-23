@@ -1,0 +1,98 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:RSBot.ViewModels.Dialog;assembly=RSBot"
+        mc:Ignorable="d" d:DesignWidth="409" d:DesignHeight="454"
+        x:Class="RSBot.Views.Dialog.ConfigDialog"
+        x:DataType="vm:ConfigDialogViewModel"
+        Title="Proxy Config"
+        Width="409" Height="454"
+        Icon="/Assets/app.png"
+		Foreground="White"
+		Background="rgba(20, 20, 20, 0.98)"
+		WindowStartupLocation="CenterScreen"
+		ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Design.DataContext>
+        <vm:ConfigDialogViewModel />
+    </Design.DataContext>
+
+    <DockPanel LastChildFill="True">
+		<Border Margin="15" DockPanel.Dock="Bottom"
+						 HorizontalAlignment="Stretch">
+			<Grid ColumnDefinitions="*,Auto">
+				<Button Content="Confirm" HorizontalAlignment="Left" Command="{Binding SaveCommand}" />
+				<Button Content="Cancel" Grid.Column="1" HorizontalAlignment="Right" Command="{Binding CancelCommand}" />
+			</Grid>
+		</Border>
+		
+		
+        <StackPanel Margin="15,11,15,0" Spacing="8">
+            <CheckBox IsChecked="{Binding IsActive}"
+                      Content="Activate"
+                      Margin="0,0,0,20"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="9">
+                <StackPanel Width="274">
+                    <TextBlock Text="Proxy Ip:"
+                             />
+                    <TextBox Text="{Binding ProxyIp}"
+                            Height="27"
+                            Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Width="93">
+                    <TextBlock Text="Proxy Port:"
+                             />
+                    <TextBox Text="{Binding ProxyPort}"
+                            Height="27"
+                            Margin="0,4,0,0"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Margin="0,20,0,0">
+                <TextBlock Text="Proxy Username:"
+                          />
+                <TextBox Text="{Binding Username}"
+                        Height="27"
+                        Margin="0,4,0,0"/>
+                <TextBlock Text="If you don't want to use it, you can leave it blank."
+                          FontSize="11"
+                          FontStyle="Italic"
+                          
+                          Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,20,0,0">
+                <TextBlock Text="Proxy password:"
+                          />
+                <TextBox Text="{Binding Password}"
+                        Height="27"
+                        PasswordChar="*"
+                        Margin="0,4,0,0"/>
+                <TextBlock Text="If you don't want to use it, you can leave it blank."
+                          FontSize="11"
+                          FontStyle="Italic"
+                          
+                          Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,20,0,0">
+                <TextBlock Text="Proxy Type:"
+                          />
+                <ComboBox SelectedIndex="{Binding SelectedProxyVersionIndex}"
+                         Height="28"
+                         HorizontalAlignment="Stretch"
+                         Margin="0,4,0,0">
+                    <ComboBoxItem>Socks4</ComboBoxItem>
+                    <ComboBoxItem>Socks5</ComboBoxItem>
+                </ComboBox>
+            </StackPanel>
+        </StackPanel>
+    </DockPanel>
+</Window> 

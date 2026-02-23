@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Avalonia.Threading;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,8 +18,7 @@ public class EventManager
     /// <param name="handler">The handler.</param>
     public static void SubscribeEvent(string name, Delegate handler)
     {
-        if (handler == null)
-            return;
+        if (handler == null) return;
 
         _listeners.Add((name, handler));
     }
@@ -30,8 +30,7 @@ public class EventManager
     /// <param name="handler">The handler.</param>
     public static void SubscribeEvent(string name, Action handler)
     {
-        if (handler == null)
-            return;
+        if (handler == null) return;
 
         _listeners.Add((name, handler));
     }
@@ -45,17 +44,15 @@ public class EventManager
     {
         try
         {
-            var targets = (
-                from o in _listeners
+            var targets = (from o in _listeners
                 where o.name == name && o.handler.Method.GetParameters().Length == parameters.Length
-                select o.handler
-            ).ToArray();
+                select o.handler).ToArray();
 
             foreach (var target in targets)
                 if (Thread.CurrentThread.Name == "Network.PacketProcessor")
-                    Task.Run(() => target.DynamicInvoke(parameters));
+                    Dispatcher.UIThread.InvokeAsync(() => { target.DynamicInvoke(parameters); });
                 else
-                    target.DynamicInvoke(parameters);
+                    Dispatcher.UIThread.Invoke(() => { target.DynamicInvoke(parameters);  });
         }
         catch (Exception e)
         {

@@ -27,7 +27,6 @@ internal class LogoutSuccessResponse : IPacketHandler
     public void Invoke(Packet packet)
     {
         Log.Notify("The player has left the game!");
-        Kernel.Proxy?.Shutdown(); //Forced disconnect because LogoutMode of 0x7005 is not yet supported.
         EventManager.FireEvent("OnLogout");
     }
 }
